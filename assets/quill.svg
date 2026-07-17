@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Quill mark v0 — placeholder for the real design pass.
+       Single feather stroke ending in a nib; use currentColor for theming. -->
+  <g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- shaft -->
+    <path d="M14 52 C 22 40, 34 24, 50 12" />
+    <!-- vane -->
+    <path d="M50 12 C 44 12, 34 16, 28 24 C 34 22, 40 22, 44 20 C 38 26, 32 32, 26 36 C 32 34, 36 34, 39 32" />
+    <!-- nib tick -->
+    <path d="M14 52 L 11 57" />
+  </g>
+</svg>

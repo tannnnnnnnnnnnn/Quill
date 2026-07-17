@@ -1,0 +1,30 @@
+<!-- @dsCard group="Components" -->
+<!doctype html><html><head><meta charset="utf-8"><title>Quill — live transcript panel (current)</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#e8e6e1;font-family:-apple-system,system-ui}
+  .panel{width:340px;height:400px;background:rgba(28,28,28,.97);border-radius:14px;
+         box-shadow:0 12px 40px rgba(0,0,0,.35);position:relative;color:#eee;overflow:hidden}
+  .hd{padding:12px 14px 6px;font-size:13px;font-weight:700;color:rgba(255,255,255,.85)}
+  .x{position:absolute;right:10px;top:8px;width:28px;height:24px;border-radius:6px;
+     border:none;background:rgba(255,255,255,.14);color:#ddd;cursor:pointer}
+  .tx{padding:6px 14px;font-size:12.5px;line-height:1.55;color:rgba(255,255,255,.92)}
+  .me b{color:#7db8ff}.them b{color:#ffc46b}
+  p{max-width:340px;color:#666;font-size:12px;text-align:center}
+</style></head><body>
+<div>
+  <div class="panel">
+    <div class="hd">🪶&nbsp; Quill — live</div>
+    <button class="x">✕</button>
+    <div class="tx">
+      <div>… loading model</div>
+      <div>● live</div>
+      <div class="them"><b>Them:</b> Can you walk us through the rollout plan for phase two?</div>
+      <div class="me"><b>Me:</b> Sure — we start with the pilot group next Monday.</div>
+      <div class="them"><b>Them:</b> And please loop in the design team earlier this time.</div>
+      <div class="me"><b>Me:</b> Noted, I'll send them the charter by Friday.</div>
+    </div>
+  </div>
+  <p>Current state (speaker colors are a proposal — live version is plain text).
+     Redesign me: speaker treatment, live indicator, line rhythm, states.</p>
+</div>
+</body></html>

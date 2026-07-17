@@ -1,0 +1,24 @@
+<!-- @dsCard group="Components" -->
+<!doctype html><html><head><meta charset="utf-8"><title>Quill — call popup (current)</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#e8e6e1;font-family:-apple-system,system-ui}
+  .card{width:330px;height:100px;background:rgba(28,28,28,.97);border-radius:14px;
+        box-shadow:0 12px 40px rgba(0,0,0,.35);position:relative;color:#fff;padding:0}
+  .t{position:absolute;left:16px;top:14px;font-size:14px;font-weight:700}
+  .s{position:absolute;left:16px;top:36px;font-size:12px;color:rgba(255,255,255,.75)}
+  .btn{position:absolute;bottom:10px;height:30px;border-radius:7px;border:none;font-size:12.5px;cursor:pointer}
+  .rec{right:16px;width:106px;background:#4b7bec;color:#fff;font-weight:600}
+  .ign{right:130px;width:72px;background:rgba(255,255,255,.14);color:#eee}
+  p{max-width:330px;color:#666;font-size:12px;text-align:center}
+</style></head><body>
+<div>
+  <div class="card">
+    <div class="t">🪶&nbsp; Call detected</div>
+    <div class="s">Teams (web) — take notes?</div>
+    <button class="btn ign">Ignore</button>
+    <button class="btn rec">Take notes</button>
+  </div>
+  <p>Current state (recreated). Real thing is an AppKit NSPanel, top-right of screen,
+     auto-dismisses in 30s. Redesign me: hierarchy, spacing, entrance, icon slot.</p>
+</div>
+</body></html>

@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quill</title>
+<style>
+  :root{
+    --ink:#1c1c1c; --paper:#f1efe9; --card:#fbfaf7; --white:#ffffff;
+    --sec:#6b6b66; --ter:#9a978f; --accent:#4b7bec; --accent-h:#3d6bd8;
+    --me:#7db8ff; --them:#e8a33d; --red:#d2543a;
+    --ghost:rgba(28,28,28,.05); --ghost-h:rgba(28,28,28,.09);
+    --hair:rgba(28,28,28,.08);
+    --shadow:0 1px 2px rgba(28,28,28,.05), 0 8px 28px rgba(28,28,28,.07);
+    --due-fg:#8a6210; --due-bg:rgba(232,163,61,.15);
+    --over-fg:#d2543a; --over-bg:rgba(210,84,58,.12);
+    --tint:rgba(75,123,236,.05);
+  }
+  [data-theme="dark"]{
+    --ink:#eae8e2; --paper:#141311; --card:#1c1b18; --white:#252420;
+    --sec:#a6a39b; --ter:#7b786f; --accent:#6b93f0; --accent-h:#84a5f4;
+    --me:#7db8ff; --them:#e8a33d; --red:#e06550;
+    --ghost:rgba(255,255,255,.06); --ghost-h:rgba(255,255,255,.11);
+    --hair:rgba(255,255,255,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.4);
+    --due-fg:#e8b45c; --due-bg:rgba(232,163,61,.14);
+    --over-fg:#ef8570; --over-bg:rgba(224,101,80,.16);
+    --tint:rgba(107,147,240,.06);
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{transition:background .25s, color .25s;background:
+        radial-gradient(1100px 500px at 85% -10%, var(--tint), transparent 60%),
+        var(--paper);
+       color:var(--ink);font:14px/1.55 -apple-system,system-ui,sans-serif;
+       display:flex;flex-direction:column;overflow:hidden;
+       -webkit-font-smoothing:antialiased}
+  .serif{font-family:ui-serif,"New York",Georgia,serif}
+  ::-webkit-scrollbar{width:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(28,28,28,.14);border-radius:8px;
+                            border:2.5px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(28,28,28,.25);background-clip:content-box}
+
+  header{display:flex;align-items:baseline;gap:12px;padding:18px 26px 14px;flex:none}
+  header img{width:24px;height:24px;align-self:center}
+  header .wm{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  header .sub{color:var(--ter);font-size:12.5px}
+  .stats{margin-left:auto;display:flex;gap:8px}
+  .chip{font-size:11.5px;color:var(--sec);background:var(--ghost);
+        padding:4px 11px;border-radius:20px;align-self:center}
+  .chip b{color:var(--ink)}
+  .themeBtn{border:none;background:var(--ghost);width:32px;height:32px;border-radius:10px;
+            cursor:pointer;color:var(--sec);font-size:15px;align-self:center;
+            transition:background .12s}
+  .themeBtn:hover{background:var(--ghost-h)}
+
+  main{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;gap:16px;
+       flex:1;min-height:0;padding:0 16px 16px}
+  @media (max-width:1100px){
+    body{overflow:auto}
+    main{grid-template-columns:minmax(0,1fr);grid-auto-rows:auto;height:auto}
+    .pane{min-height:220px;max-height:70vh}
+    .right{min-height:0}
+  }
+  .pane{background:var(--card);border:1px solid var(--hair);border-radius:16px;
+        box-shadow:var(--shadow);min-height:0;display:flex;flex-direction:column}
+  .pane-head{padding:14px 16px 10px;font-size:10.5px;font-weight:700;
+             letter-spacing:.09em;text-transform:uppercase;color:var(--ter);flex:none}
+  .scroll{overflow-y:auto;min-height:0;flex:1}
+
+  /* meetings */
+  .mtg{position:relative;padding:12px 14px 12px 18px;margin:0 8px 6px;border-radius:12px;
+       cursor:pointer;transition:background .12s}
+  .mtg:hover{background:var(--ghost)}
+  .mtg.sel{background:var(--white);box-shadow:0 2px 12px rgba(28,28,28,.09)}
+  .mtg.sel::before{content:"";position:absolute;left:6px;top:14px;bottom:14px;width:3px;
+                   border-radius:3px;background:var(--accent)}
+  .mtg .d{font-size:10.5px;color:var(--ter);font-variant-numeric:tabular-nums;
+          letter-spacing:.03em}
+  .mtg .t{font-weight:600;font-size:14px;margin:2px 0 4px;line-height:1.3}
+  .mtg .s{font-size:11.5px;color:var(--sec);line-height:1.45;display:-webkit-box;
+          -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* note pane */
+  .note-scroll{padding:26px 32px}
+  .note-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:4px}
+  .note-head h1{font-size:23px;line-height:1.25;flex:1;letter-spacing:-.01em}
+  .del-mtg{flex:none;border:none;background:var(--ghost);color:var(--ter);width:30px;
+           height:30px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1}
+  .del-mtg:hover{background:rgba(210,84,58,.12);color:var(--red)}
+  .enh-mtg{flex:none;border:none;background:var(--ghost);color:var(--ter);width:30px;
+           height:30px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1}
+  .enh-mtg:hover{background:rgba(75,123,236,.14);color:var(--accent)}
+  .enh-mtg:disabled{opacity:.4;cursor:default}
+  .metapop{display:none;margin:2px 0 10px;padding:7px 12px;background:var(--ghost);
+           border-radius:9px;font-size:12px;color:var(--sec);width:fit-content}
+  .metapop.show{display:block}
+  .meta-btn{flex:none;border:none;background:var(--ghost);color:var(--ter);width:30px;
+            height:30px;border-radius:8px;cursor:pointer;font-size:13.5px;line-height:1}
+  .meta-btn:hover{background:var(--ghost-h);color:var(--sec)}
+  #noteWrap h2{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+           color:var(--sec);margin:34px 0 12px;display:flex;align-items:center;gap:8px}
+  #noteWrap h2::after{content:"";flex:1;height:1px;background:var(--hair)}
+  #noteWrap p{margin:10px 0;max-width:74ch;line-height:1.65}
+  #noteWrap ul{margin:8px 0 16px 4px;list-style:none}
+  #noteWrap li{margin:6px 0;padding-left:18px;position:relative;line-height:1.55}
+  #noteWrap li::before{content:"";position:absolute;left:2px;top:.62em;width:5px;height:5px;
+                   border-radius:50%;background:var(--them)}
+  #noteWrap li.task::before{background:var(--accent)}
+  #noteWrap li.task.done{color:var(--ter);text-decoration:line-through}
+  #noteWrap a{color:var(--accent);text-decoration:none}
+  .tbtn{margin:26px 0 4px;font-size:12px;font-weight:600;color:var(--accent);
+        cursor:pointer;background:var(--ghost);border:none;border-radius:9px;
+        padding:9px 15px;transition:background .12s}
+  .tbtn:hover{background:var(--ghost-h)}
+  #transcript{margin-top:16px;font-size:13px;line-height:1.65;display:none;
+              border-top:1px solid var(--hair);padding-top:16px}
+  .trline{margin:7px 0;color:var(--ink);max-width:74ch}
+  .trline .spk{font-size:9.5px;font-weight:700;letter-spacing:.07em;border-radius:5px;
+               padding:1.5px 6px;margin-right:8px;vertical-align:1px}
+  .trline.me .spk{color:#2c5db8;background:rgba(125,184,255,.22)}
+  .trline.them .spk{color:#8a6210;background:rgba(232,163,61,.2)}
+  [data-theme="dark"] .trline.me .spk{color:#a9ccff}
+  [data-theme="dark"] .trline.them .spk{color:#eec27c}
+  .trline .ts{font-size:10.5px;color:var(--ter);font-variant-numeric:tabular-nums;
+              margin-right:7px}
+  .trhead{color:var(--ter);font-size:12px;margin:2px 0}
+  .empty{color:var(--ter);font-size:12.5px;padding:10px 16px}
+
+  /* right column */
+  .right{display:flex;flex-direction:column;gap:16px;min-height:0}
+  .right .pane.ask{flex:none}
+  .right .pane.todos{flex:1;min-height:0}
+
+  .askbody{padding:4px 14px 14px}
+  .askrow{display:flex;gap:8px}
+  .askrow input{flex:1;border:1px solid var(--hair);background:var(--white);
+                border-radius:10px;padding:10px 13px;font:inherit;outline:none;
+                transition:border-color .12s, box-shadow .12s}
+  .askrow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(75,123,236,.14)}
+  .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;
+       padding:10px 17px;font:600 13px -apple-system,system-ui;cursor:pointer;
+       transition:background .12s}
+  .btn:hover{background:var(--accent-h)}
+  .btn:disabled{opacity:.45;cursor:default}
+  #answer{background:var(--white);border:1px solid var(--hair);border-radius:12px;
+          padding:13px 15px;font-size:13px;display:none;max-height:36vh;
+          overflow-y:auto;margin-top:10px;line-height:1.6}
+  #answer p{margin:6px 0}
+  #answer ul{margin:4px 0 4px 18px}
+  #answer b{font-weight:600}
+  .thinking{color:var(--ter);font-style:italic}
+  .thinking::after{content:"";animation:dots 1.4s steps(4,end) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+  /* todos */
+  .addrow{display:flex;gap:8px;padding:2px 14px 12px}
+  .addrow input{flex:1;border:1px solid var(--hair);background:var(--white);
+                border-radius:10px;padding:9px 12px;font:inherit;outline:none;
+                transition:border-color .12s, box-shadow .12s}
+  .addrow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(75,123,236,.14)}
+  .addbtn{width:38px;flex:none;border:none;border-radius:10px;background:var(--ghost);
+          color:var(--ink);font-size:19px;cursor:pointer;transition:background .12s}
+  .addbtn:hover{background:var(--ghost-h)}
+  .todo{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;margin:0 8px 4px;
+        border-radius:10px;font-size:13px;line-height:1.45;position:relative}
+  .todo:hover{background:var(--ghost)}
+  .todo input[type=checkbox]{margin-top:3px;accent-color:var(--accent);flex:none;
+                             width:15px;height:15px;cursor:pointer}
+  .todo .body{flex:1;min-width:0}
+  .todo .chips{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
+  .tchip{font-size:10px;color:var(--sec);background:var(--ghost);border-radius:6px;
+         padding:2px 7px;white-space:nowrap}
+  .tchip.due{color:var(--due-fg);background:var(--due-bg)}
+  .tchip.over{color:var(--over-fg);background:var(--over-bg)}
+  .todo .x{opacity:0;border:none;background:none;color:var(--ter);cursor:pointer;
+           font-size:13px;padding:2px 5px;border-radius:6px;flex:none;transition:opacity .1s}
+  .todo:hover .x{opacity:1}
+  .todo .x:hover{color:var(--red);background:rgba(210,84,58,.1)}
+  .todo.done .body{color:var(--ter);text-decoration:line-through}
+  #doneWrap{margin:4px 8px 10px}
+  #doneWrap summary{color:var(--ter);font-size:11.5px;cursor:pointer;padding:6px 10px;
+                    user-select:none}
+</style>
+</head>
+<body>
+<header>
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABICAYAAABhlHJbAAAEBElEQVR4AezaO2gUQRjA8TvBxsaAio2YCEIiiFECioUgJmpEK4sTBBUMaGGRwso0dtcppLDxUaQRjWghgkRIsPBBIqJJY4IREh9lJKksFBP+ge8ye8wuuZ3bndndET5nZvfmduaXb2YnkA0l/89IwAMa8ZVKHtADGgoYdvcZ6AENBQy7+wz0gIYCht19BnpAQwHD7j4DPaChgGH3ImagIVmwuwcMejTc8oANkwU7eMCgR8MtD9gwWbBDrgDPHNp9ghg43/WFMjjVZFqZBgRpeODY8szds6txq2/fCHHpaGsHJfeTYVv71swBgiJoIHW2tazNxkItM4ACt160odfz0y/GZ18lbeo8YKNwgIFXffhxD/Wkw2lAXga6jJucWyxdfzB1krIeKE08nu0koGQdLwMGKQEYcJXqWPli986R+v2Pe2llnozJOUBd1qlwDJyXiIon99PY83i+Gk4BgqfLukp1rAwOmalb0mQk99WJpVV3BlCHx34GDhiCR70+yMj6a2m1nQAMw9vftrkDHA7KZF4Yyue5pemwe0lftw6ow2PSLGX2OYJ2WLD/pf3iUMdiFTAMTx1gVB08WeJRn0vynlVAlmjcybmAx9itAqp7FyAEZzleHgwuLLhvO/NkbFYB2bsAIwAhGBj7H6UuwKOf7p6Na1YBmTDnN4J61FGF+67hMSbrgAxCIuqo4iIe43YGkPMeA9KFq3iM1QlAjjNh5z2X8ZwABC/spQHe1LelfrKT30YIPs/AXYnkMnAdMwQjDI8jDedE9kU1O7m2jq9O7SPWAKPwmD1oBHU11LOjet1W3Qogx5WwzAuDICM5L7p0BmSsVgBZljw8KgAjQGu/8qzMIVvOi1H90r6XOiBLVzdJsAjACMAIF9HU8acKCJ66dMPAXEezAqjDkwzLEpiKRz21DFQzjweDR5n1SAWQg7AKxQFZbWe5njggS1c9z4Hn2lHE5AeYKCB46tLNGx7wiQKqeDwsT5nHfIjEAPO87wEnEQCUi6YlSzfP+57q03TA+t9zOSzncekKYtMB+asp+XLKvJz3mIsumgqoW7q6h+bpWtMAwVPfunk8suh+8E0DVPF4UJ73PeYn0RTAO9eOLMsXUpJ9lEUIY8Deg62Hezq31awm55ZKRck+Jm0MeKprxzu+iPj773+pUh0tUy9KGAFePb33fu+B7TWre6PzI7VGQSpGgJeP7+oTpw9fF0uDTz/1SrsoZWzAc93t/S2bNtacht9/r9QaBarEBnw8OjP4Y+HPKtWjtz9/P38z+2S1kbH/TIcbG5AH99x4Wb5we3zrzaGJLbSLGEaAgE1M/1qgLGoYAxYVTubtAUUiZukBY8JJNw8oEjFLDxgTTrp5QJGIWa4AAAD//3m9OL0AAAAGSURBVAMAourYoGpCA2kAAAAASUVORK5CYII=" alt="">
+  <span class="wm serif">Quill</span>
+  <span class="sub">your meetings, minuted</span>
+  <div class="stats">
+    <span class="chip"><b id="nMtg">0</b>&nbsp;meetings</span>
+    <span class="chip"><b id="nTodo">0</b>&nbsp;open to-dos</span>
+    <button class="themeBtn" id="themeBtn" title="Toggle night mode">☾</button>
+  </div>
+</header>
+<main>
+  <section class="pane">
+    <div class="pane-head">Meetings</div>
+    <div class="scroll" id="list"></div>
+  </section>
+
+  <section class="pane">
+    <div class="scroll note-scroll">
+      <div id="noteWrap">
+        <div class="empty">Select a meeting.</div>
+      </div>
+      <button class="tbtn" id="tbtn" style="display:none">Show full transcript</button>
+      <div id="transcript"></div>
+    </div>
+  </section>
+
+  <div class="right">
+    <section class="pane ask">
+      <div class="pane-head">Ask your meetings</div>
+      <div class="askbody">
+        <div class="askrow">
+          <input id="q" placeholder="What did we decide about…">
+          <button class="btn" id="askBtn">Ask</button>
+        </div>
+        <div id="answer"></div>
+      </div>
+    </section>
+    <section class="pane todos">
+      <div class="pane-head">To-dos</div>
+      <div class="addrow">
+        <input id="newTodo" placeholder="Add a to-do…">
+        <button class="addbtn" id="addBtn" title="Add">+</button>
+      </div>
+      <div class="scroll">
+        <div id="todos"></div>
+        <details id="doneWrap"><summary>completed</summary><div id="dones"></div></details>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const api = (p, body) => fetch(p, body ? {method:"POST",
+  headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : undefined)
+  .then(r=>r.json());
+
+let lastMeta = "";
+function md(src){
+  lastMeta = "";
+  const fm = src.match(/^---\n([\s\S]*?)\n---\n/);
+  if (fm){
+    const a = (fm[1].match(/attendees:\s*\[(.*)\]/)||[])[1] || "";
+    const d = (fm[1].match(/date:\s*(\S+)/)||[])[1] || "";
+    lastMeta = d.replace("T", "  ·  ") + (a ? "  ·  " + a : "");
+    src = src.slice(fm[0].length);
+  }
+  const out=[]; let inUl=false;
+  const flush=()=>{ if(inUl){out.push("</ul>");inUl=false;} };
+  for (let line of src.split("\n")){
+    let m;
+    if ((m=line.match(/^##\s+(.*)/)))  {flush(); out.push(`<h2>${esc(m[1])}</h2>`); continue;}
+    if ((m=line.match(/^#\s+(.*)/)))   {flush(); out.push(`<h1 class="serif">${esc(m[1])}</h1>`); continue;}
+    if ((m=line.match(/^- \[([ xX])\]\s?(.*)/))){
+      if(!inUl){out.push("<ul>");inUl=true;}
+      out.push(`<li class="task${m[1]!==" "?" done":""}">${inline(m[2])}</li>`);
+      continue;}
+    if ((m=line.match(/^[-*]\s+(.*)/))){if(!inUl){out.push("<ul>");inUl=true;}
+      out.push(`<li>${inline(m[1])}</li>`); continue;}
+    flush();
+    if (line.trim()==="" || line.trim()==="---") continue;
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  flush();
+  return out.join("\n");
+}
+const inline = s => esc(s)
+  .replace(/\[\[(?:Transcripts\/)?([^\]]+)\]\]/g, "<a>$1</a>")
+  .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+
+function trHtml(t){
+  return t.split("\n").map(l=>{
+    const m = l.match(/^- \*\*(Me|Them)\*\* \[([\d:]+)\]: (.*)$/);
+    if (m) return `<div class="trline ${m[1].toLowerCase()}"><span class="spk">${m[1]==="Me"?"ME":"THEM"}</span><span class="ts">${m[2]}</span>${esc(m[3])}</div>`;
+    if (!l.trim() || l.startsWith("# ")) return "";
+    return `<div class="trhead">${esc(l)}</div>`;
+  }).join("");
+}
+
+// night mode: manual choice persists; default follows system
+const applyTheme = t => document.documentElement.setAttribute("data-theme", t);
+const sysDark = matchMedia("(prefers-color-scheme: dark)");
+let theme = localStorage.getItem("quill-theme") || (sysDark.matches ? "dark" : "light");
+applyTheme(theme);
+document.addEventListener("DOMContentLoaded", ()=>{
+  const b = document.getElementById("themeBtn");
+  const paint = ()=> b.textContent = theme === "dark" ? "☀" : "☾";
+  paint();
+  b.onclick = ()=>{ theme = theme === "dark" ? "light" : "dark";
+                    localStorage.setItem("quill-theme", theme); applyTheme(theme); paint(); };
+});
+
+let meetings=[], selName=null;
+async function loadMeetings(keepSel=true){
+  meetings = await api("/api/meetings");
+  document.getElementById("nMtg").textContent = meetings.length;
+  if (!keepSel || !meetings.some(m=>m.name===selName))
+    selName = meetings.length ? meetings[0].name : null;
+  const L = document.getElementById("list");
+  L.innerHTML = meetings.map(m=>`
+    <div class="mtg ${m.name===selName?"sel":""}" onclick="openNote(${JSON.stringify(m.name).replace(/"/g,"&quot;")})">
+      <div class="d">${m.date}</div>
+      <div class="t serif">${esc(m.name.slice(11)||m.name)}</div>
+      <div class="s">${esc(m.summary)}</div>
+    </div>`).join("") || `<div class="empty">No meetings yet — take a call.</div>`;
+  if (selName) openNote(selName); else
+    document.getElementById("noteWrap").innerHTML = `<div class="empty">No meetings yet.</div>`;
+}
+
+async function openNote(name){
+  selName = name;
+  document.querySelectorAll(".mtg").forEach(el=>{
+    el.classList.toggle("sel", el.querySelector(".t").textContent === (name.slice(11)||name));
+  });
+  const r = await api("/api/note?name="+encodeURIComponent(name));
+  const body = md(r.content||"");
+  document.getElementById("noteWrap").innerHTML = `
+    <div class="note-head">
+      <h1 class="serif">${esc(name.slice(11)||name)}</h1>
+      <button class="meta-btn" title="Date, time & attendees"
+              onclick='document.getElementById("metaPop").classList.toggle("show")'>ⓘ</button>
+      <button class="enh-mtg" id="enhBtn" title="Enhance: re-transcribe & re-summarize from audio"
+              onclick='enhMeeting(${JSON.stringify(name)})'>↻</button>
+      <button class="del-mtg" title="Delete this meeting everywhere"
+              onclick='delMeeting(${JSON.stringify(name)})'>✕</button>
+    </div>
+    <div id="metaPop" class="metapop">${esc(lastMeta || "no metadata")}</div>` + body;
+  const tb=document.getElementById("tbtn"), tr=document.getElementById("transcript");
+  tr.style.display="none"; tr.textContent=""; tb.style.display="inline-block";
+  tb.textContent="Show full transcript";
+  tb.onclick = async ()=>{
+    if (tr.style.display==="none"){
+      const link = ((r.content||"").match(/\[\[Transcripts\/([^\]]+)\]\]/)||[])[1];
+      if (!link) tr.textContent="(no transcript linked)";
+      else tr.innerHTML = trHtml((await api("/api/transcript?name="+encodeURIComponent(link))).content || "(missing)");
+      tr.style.display="block"; tb.textContent="Hide transcript";
+    } else { tr.style.display="none"; tb.textContent="Show full transcript"; }
+  };
+}
+
+async function enhMeeting(name){
+  if (!confirm(`Re-process "${name.slice(11)||name}" from its audio?\n\nRebuilds the transcript and note with the current (better) models. Takes a few minutes; you'll get a notification.`)) return;
+  const b = document.getElementById("enhBtn");
+  if (b){ b.disabled = true; b.textContent = "…"; }
+  const r = await api("/api/meeting/enhance", {name});
+  if (!r.ok) { alert(r.error || "could not enhance"); if(b){b.disabled=false;b.textContent="↻";} }
+}
+
+async function delMeeting(name){
+  if (!confirm(`Delete "${name.slice(11)||name}" everywhere?\n\nRemoves the note, transcript, its to-dos, the index line, and the recording. Cannot be undone.`)) return;
+  await api("/api/meeting/delete", {name});
+  selName = null;
+  loadMeetings(false); loadTodos();
+}
+
+const today = new Date().toISOString().slice(0,10);
+function todoRow(line, done){
+  const m = line.match(/-\s\[[ xX]\]\s(.*)$/);
+  let body = m ? m[1] : line;
+  const src = (body.match(/\(from \[\[([^\]]+)\]\]\)/)||[])[1];
+  const due = (body.match(/📅\s*(\d{4}-\d{2}-\d{2})/)||[])[1];
+  body = body.replace(/\(from \[\[[^\]]+\]\]\)/,"").replace(/📅\s*\d{4}-\d{2}-\d{2}/,"")
+             .replace(/🙋\s*\S+/,"").trim();
+  const chips =
+    (due?`<span class="tchip ${!done && due<today?"over":"due"}">📅 ${due}</span>`:"") +
+    (src?`<span class="tchip">${esc(src.slice(11)||src)}</span>`:"");
+  return `<div class="todo ${done?"done":""}">
+    <input type="checkbox" ${done?"checked":""} onchange='api("/api/todo",{line:${JSON.stringify(line)}}).then(loadTodos)'>
+    <div class="body">${esc(body)}${chips?`<div class="chips">${chips}</div>`:""}</div>
+    <button class="x" title="Remove" onclick='delTodo(${JSON.stringify(line)})'>✕</button>
+  </div>`;
+}
+async function loadTodos(){
+  const t = await api("/api/todos");
+  document.getElementById("nTodo").textContent = t.open.length;
+  document.getElementById("todos").innerHTML =
+    t.open.length ? t.open.map(l=>todoRow(l,false)).join("")
+                  : `<div class="empty">Nothing pending. Meetings add tasks here — or add your own above.</div>`;
+  document.getElementById("dones").innerHTML = t.done.map(l=>todoRow(l,true)).join("");
+  document.getElementById("doneWrap").style.display = t.done.length ? "block" : "none";
+}
+async function delTodo(line){ await api("/api/todo/delete",{line}); loadTodos(); }
+async function addTodo(){
+  const inp = document.getElementById("newTodo");
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value="";
+  await api("/api/todo/add",{text});
+  loadTodos();
+}
+document.getElementById("addBtn").onclick = addTodo;
+document.getElementById("newTodo").addEventListener("keydown", e=>{if(e.key==="Enter") addTodo();});
+
+async function ask(){
+  const q = document.getElementById("q").value.trim();
+  if(!q) return;
+  const btn=document.getElementById("askBtn"), a=document.getElementById("answer");
+  btn.disabled=true; a.style.display="block";
+  a.innerHTML=`<span class="thinking">reading your meetings</span>`;
+  try{
+    const r = await api("/api/ask",{q});
+    a.innerHTML = r.answer ? md(r.answer) : `<span class="thinking">${esc(r.error||"no answer")}</span>`;
+  }catch(e){ a.innerHTML=`<span class="thinking">error: ${esc(String(e))}</span>`; }
+  btn.disabled=false;
+}
+document.getElementById("askBtn").onclick = ask;
+document.getElementById("q").addEventListener("keydown", e=>{if(e.key==="Enter") ask();});
+
+loadMeetings(); loadTodos();
+setInterval(loadTodos, 30000);
+setInterval(()=>loadMeetings(true), 60000);
+</script>
+</body>
+</html>
