@@ -39,22 +39,22 @@ export function platformForUrl(value) {
     host === "teams.live.com"        // personal Microsoft accounts
   ) {
     /*
-     * The whole Teams web app lives under /v2/, so the path prefix alone means
-     * nothing. Key on the markers that only appear for a call: the meetup-join
-     * deep link, the pre-join route, and the join query parameter Teams sets
-     * when it hands off into a meeting.
+     * Teams tells you nothing through the URL. Measured 2026-07-26 on a real
+     * personal-account call: the address bar read `teams.live.com/v2/` in the
+     * lobby, in the call, and back in the chat list — identical throughout, no
+     * meeting id, no route, no query parameter. Any URL test beyond the host
+     * therefore rejects real calls, which is what an earlier version did.
+     *
+     * The leave control carries the whole signal here, and it is enough: the
+     * same `/v2/` lobby had no leave control at all, and "Leave team" does not
+     * match a pattern anchored to leave/leave call/leave meeting/leave room.
      */
-    const callPath =
-      /\/(?:l\/)?meetup-join(?:\/|$)/i.test(path) ||
-      /\/meet(?:\/|$)/i.test(path) ||
-      /(?:pre-join-calling|meetup-join|\/meet\/)/i.test(url.hash) ||
-      url.searchParams.has("meetingjoin");
     return {
       id: "microsoftTeams",
       platform: "microsoft-teams",
       label: "Microsoft Teams",
       context: "Microsoft Teams · web",
-      urlStrongSignal: callPath
+      urlStrongSignal: true
     };
   }
 
