@@ -136,7 +136,8 @@ try {
       "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc/0",
       "Teams meetup-join deep link"
     ],
-    ["https://teams.cloud.microsoft/v2/?meetingjoin=true", "Teams join handoff"],
+    // measured: a real Teams call sits on this exact URL, no meeting marker
+    ["https://teams.live.com/v2/", "Teams personal in-call"],
     ["https://example.webex.com/meet/tanmay", "Webex personal room"]
   ];
 
@@ -174,8 +175,7 @@ try {
 
   for (const [url, label] of [
     ["https://zoom.us/download", "Zoom marketing page"],
-    ["https://teams.microsoft.com/v2/", "Teams shell with no call"],
-    ["https://teams.cloud.microsoft/v2/#/conversations/abc", "Teams chat view"],
+
     ["https://example.webex.com/", "Webex site root"]
   ]) {
     assert.equal(
@@ -220,14 +220,34 @@ try {
     "cross-origin frames must be skipped without throwing, and prove nothing"
   );
 
+  /*
+   * Teams keeps the identical URL in the lobby, in the call, and back in the
+   * chat list (measured: teams.live.com/v2/ throughout), so the leave control
+   * is the only thing separating them.
+   */
   assert.equal(
     detectInCall(
-      "https://teams.live.com/v2/?meetingjoin=true",
+      "https://teams.live.com/v2/",
       new FakeRoot({ controls: [new FakeControl({ label: "Leave" })] })
     ).active,
     true,
-    "personal Teams runs on teams.live.com, not teams.microsoft.com"
+    "a Teams call carries no URL marker — the leave control must decide"
   );
+
+  for (const [label, what] of [
+    ["Change to another account", "the Teams shell"],
+    ["Leave team", "a team the user can leave"],
+    ["Leave feedback", "a feedback link"]
+  ]) {
+    assert.equal(
+      detectInCall(
+        "https://teams.live.com/v2/",
+        new FakeRoot({ controls: [new FakeControl({ label })] })
+      ).active,
+      false,
+      `${what} must not read as a call ("${label}")`
+    );
+  }
 
   console.log(
     "PASS platforms Meet solo=true; pre-join=false; landing=false; stray video=false; call_end icon=true; Zoom/Teams/Webex leave-control=true; their lobbies=false; non-meeting urls=false; zoom-in-iframe=true; cross-origin-frames-skipped; teams.live.com=true"
