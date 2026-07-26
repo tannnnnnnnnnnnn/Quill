@@ -63,6 +63,8 @@ def run(login_agent: bool = True) -> None:
               Path(data).expanduser()):
         d.mkdir(parents=True, exist_ok=True)
     print(f"created {vault} and {data}")
+    print("\nOptional next step: `meet enroll` records 24 seconds of your voice, "
+          "so whatever else the microphone hears in the room is not quoted as you.")
 
     if not login_agent:
         return

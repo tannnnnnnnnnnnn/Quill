@@ -71,6 +71,7 @@ System Audio Recording Only → enable Audiocap
 meet start --title "Standup"   # or click 🎙 in the menu bar
 meet stop                      # stop → transcribe → Claude → note ready
 meet status
+meet enroll                    # 24s voice sample; keeps room audio off your track
 meet ask "what did we decide about X?"   # Q&A over all your meetings
 meet transcribe <dir>          # re-run stages on an old recording
 meet process <dir>
@@ -84,6 +85,16 @@ combined with ~6-9s of sustained mic use. Then a card slides in top-right:
 "🎙 Call detected — take notes?" One click starts capture (auto-dismisses in
 30s; re-arms after the mic is quiet ~30s). Chrome tab checks need the one-time
 Automation permission (python → Chrome). Toggle: menu → "Call Detection".
+
+**Your voice vs. the room** (`meet enroll`): the microphone hears everything
+near you — a colleague at the next desk, a TV, a phone call across the office —
+and the transcript labels all of it **Me**. None of it is quieter than you are,
+so loudness cannot separate them; only the voice itself can. `meet enroll`
+records 24 seconds of you reading a short passage, builds a local voice profile
+in `~/.config/quill/`, and from then on any **Me** line that does not sound like
+you is relabelled **Them** rather than dropped — it was said, just not by you.
+First run downloads a ~26 MB speaker model. Optional: skip it and nothing
+changes.
 
 **Live transcript:** while recording, a floating panel on the right shows
 Me/Them lines within a few seconds of speech (12s tail window re-transcribed
@@ -126,6 +137,7 @@ Everything else lives in `quill/config.py`: models, `KEEP_AUDIO`
 
 - `them` track empty → system-audio permission missing (see Setup) — or nobody spoke.
 - Transcription slow first run → 600 MB model download, cached afterwards.
+- Room audio still labelled **Me** → run `meet enroll`, then `meet transcribe <dir>` to re-score.
 - Claude step fails → read `claude.log` inside the recording dir, re-run with `meet process <dir>`.
 - Recorder stuck → `meet status`; stale state clears itself; worst case `pkill audiocap`.
 - Notes land in the wrong place → check `~/.config/quill/config.json`, or re-run `meet init`.
