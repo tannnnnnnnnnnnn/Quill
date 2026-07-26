@@ -6,16 +6,14 @@ Copy for the developer dashboard. Build the upload zip with `make extension-zip`
 Submission needs a Chrome Web Store developer account — a one-time $5 fee — and
 takes a few days of review.
 
-Hold off submitting. Two reasons:
+Both reasons this was held back are now gone: Meet, Zoom and Teams have each
+been measured on a real call, and the Mac app installs with one command instead
+of a source build. Webex is still unmeasured — the copy below says so rather
+than claiming it.
 
-1. Zoom, Teams, and Webex detection has not been measured on a real call, and
-   the listing claims all four platforms.
-2. The extension cannot work without the Quill Mac app, and that app installs
-   from source — Xcode tools, uv, `make setup`. Store traffic is one-click
-   installers, so most people who find this listing would install it, see
-   "Quill isn't running", and never come back. Ship the extension as a
-   `Load unpacked` step in the repo README until the Mac app has a real
-   installer.
+Still needed before submitting: the $5 developer account, and screenshots. The
+popup and options pages can be captured from the extension itself; the two
+in-call shots need a real meeting.
 
 ## Fields
 
@@ -38,13 +36,18 @@ drives the recorder running on your own machine.
 ## Description
 
 REQUIRES THE QUILL MAC APP. This extension is a remote control — on its own it
-does nothing at all. Install Quill first from
-github.com/tannnnnnnnnnnnn/Quill (macOS on Apple silicon, built from source).
+does nothing at all. Install Quill first (macOS 14.4+ on Apple silicon) with one
+command from a Terminal:
+
+  curl -fsSL https://tannnnnnnnnnnnn.github.io/Quill/install.sh | sh
 
 With the app running, Quill notices when you join a call in your browser,
 offers to take notes, and hands the job to the app on your Mac. Audio is
 captured and transcribed locally; the extension itself never touches your
 microphone.
+
+Call detection is tested on Google Meet, the Zoom web client, and Microsoft
+Teams. Webex is supported but not yet verified on a real call.
 
 While you talk, a panel shows the live two-sided transcript. When you hang up,
 a summary with action items is waiting in your notes folder.
@@ -57,7 +60,8 @@ What makes it different:
 • Free and open source, MIT licensed. Read every line at
   github.com/tannnnnnnnnnnnn/Quill
 
-Requires the Quill app on macOS. Setup instructions are in the repository.
+Requires the Quill app on macOS, plus Claude Code signed in with a paid Claude
+plan — that is what writes your notes. Setup instructions are in the repository.
 
 Quill records everyone on a call, not only you. Many places require their
 consent first — please ask.
@@ -81,8 +85,9 @@ frequently continues in a tab the user is not currently viewing, and detection
 must keep working there.
 
 **Host access to meet.google.com, \*.zoom.us/wc/\*, teams.microsoft.com,
-teams.cloud.microsoft, \*.webex.com** — These are the meeting surfaces Quill
-supports. The content script inspects only URL shape and whether in-call
+teams.cloud.microsoft, teams.live.com, \*.webex.com** — These are the meeting
+surfaces Quill supports; `teams.live.com` is where personal Microsoft accounts
+run Teams. The content script inspects only URL shape and whether in-call
 controls are present, then renders Quill's own panel. It does not read chat,
 captions, participant names, or any other page content.
 
