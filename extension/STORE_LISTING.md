@@ -4,16 +4,26 @@ Copy for the developer dashboard. Build the upload zip with `make extension-zip`
 (writes `dist/quill-extension-<version>.zip`).
 
 Submission needs a Chrome Web Store developer account — a one-time $5 fee — and
-takes a few days of review. Do not submit until Zoom, Teams, and Webex detection
-is measured on real calls, since the listing below claims them.
+takes a few days of review.
+
+Hold off submitting. Two reasons:
+
+1. Zoom, Teams, and Webex detection has not been measured on a real call, and
+   the listing claims all four platforms.
+2. The extension cannot work without the Quill Mac app, and that app installs
+   from source — Xcode tools, uv, `make setup`. Store traffic is one-click
+   installers, so most people who find this listing would install it, see
+   "Quill isn't running", and never come back. Ship the extension as a
+   `Load unpacked` step in the repo README until the Mac app has a real
+   installer.
 
 ## Fields
 
 **Name:** Quill
 
 **Summary** (132 char max):
-Turn browser meetings into notes. Quill detects the call and drives the
-recorder on your own Mac — nothing leaves your machine.
+Companion for the Quill Mac app (required). Detects your browser calls and
+drives the recorder running on your own machine.
 
 **Category:** Productivity / Workflow & Planning
 
@@ -27,9 +37,14 @@ recorder on your own Mac — nothing leaves your machine.
 
 ## Description
 
-Quill notices when you join a call in your browser, offers to take notes, and
-hands the job to the Quill app running on your own Mac. Audio is captured and
-transcribed locally; the extension itself never touches your microphone.
+REQUIRES THE QUILL MAC APP. This extension is a remote control — on its own it
+does nothing at all. Install Quill first from
+github.com/tannnnnnnnnnnnn/Quill (macOS on Apple silicon, built from source).
+
+With the app running, Quill notices when you join a call in your browser,
+offers to take notes, and hands the job to the app on your Mac. Audio is
+captured and transcribed locally; the extension itself never touches your
+microphone.
 
 While you talk, a panel shows the live two-sided transcript. When you hang up,
 a summary with action items is waiting in your notes folder.

@@ -128,6 +128,17 @@ export const SURFACE_STYLES = `
     background: rgba(28, 28, 28, 0.09);
   }
 
+  /* an anchor, not a button — it has to earn the same box by hand */
+  .setup-link {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    border-radius: 9px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+  }
+
   .primary-button {
     flex: 1 1 auto;
     padding: 0 16px;

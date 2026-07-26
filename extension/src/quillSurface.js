@@ -1,5 +1,9 @@
 import { SURFACE_STYLES } from "./surfaceStyles.js";
 
+// Where to send someone whose Quill app isn't reachable — most often because
+// they installed the extension without it.
+const SETUP_URL = "https://tannnnnnnnnnnnn.github.io/Quill/";
+
 function formatElapsed(startedAt) {
   const startMs =
     typeof startedAt === "number" && startedAt > 0
@@ -201,7 +205,20 @@ export class QuillSurface {
         retry.textContent = "Try again";
       }
     });
-    actions.append(dismiss, retry);
+    /*
+     * The extension is a remote control for the Quill app on the user's Mac; on
+     * its own it can do nothing. Someone who installed only the extension will
+     * land here and has no way to guess that, so send them somewhere useful
+     * rather than leaving "Try again" as the only exit.
+     */
+    const setup = document.createElement("a");
+    setup.className = "ghost-button setup-link";
+    setup.textContent = "Set up Quill";
+    setup.href = SETUP_URL;
+    setup.target = "_blank";
+    setup.rel = "noreferrer";
+
+    actions.append(setup, dismiss, retry);
     card.append(top, actions);
     this.shadow.append(card);
   }
