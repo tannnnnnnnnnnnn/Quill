@@ -113,8 +113,71 @@ try {
     "Meet's locale-independent call_end icon must detect in-call chrome"
   );
 
+  /*
+   * Zoom, Teams, and Webex: a meeting URL plus a leave control. The pre-join
+   * lobby is the case that must stay silent — it shares the URL and offers
+   * "Join", never "Leave".
+   */
+  const MEETING_URLS = [
+    ["https://us02web.zoom.us/wc/84512345678/join", "Zoom web client"],
+    [
+      "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc/0",
+      "Teams meetup-join deep link"
+    ],
+    ["https://teams.cloud.microsoft/v2/?meetingjoin=true", "Teams join handoff"],
+    ["https://example.webex.com/meet/tanmay", "Webex personal room"]
+  ];
+
+  for (const [url, label] of MEETING_URLS) {
+    for (const leaveLabel of [
+      "Leave",
+      "Leave (Ctrl+Shift+H)",
+      "Leave meeting",
+      "Hang up",
+      "End meeting"
+    ]) {
+      assert.equal(
+        detectInCall(
+          url,
+          new FakeRoot({ controls: [new FakeControl({ label: leaveLabel })] })
+        ).active,
+        true,
+        `${label} with a "${leaveLabel}" control must be detected`
+      );
+    }
+
+    const lobby = new FakeRoot({
+      media: [fakeVideo({ readyState: 4, paused: false })],
+      controls: [
+        new FakeControl({ label: "Join now", text: "Join now" }),
+        new FakeControl({ label: "Leave feedback" })
+      ]
+    });
+    assert.equal(
+      detectInCall(url, lobby).active,
+      false,
+      `${label} pre-join lobby must not be detected, camera preview and all`
+    );
+  }
+
+  for (const [url, label] of [
+    ["https://zoom.us/download", "Zoom marketing page"],
+    ["https://teams.microsoft.com/v2/", "Teams shell with no call"],
+    ["https://teams.cloud.microsoft/v2/#/conversations/abc", "Teams chat view"],
+    ["https://example.webex.com/", "Webex site root"]
+  ]) {
+    assert.equal(
+      detectInCall(
+        url,
+        new FakeRoot({ controls: [new FakeControl({ label: "Leave" })] })
+      ).active,
+      false,
+      `${label} must not be detected even with a matching control present`
+    );
+  }
+
   console.log(
-    "PASS platforms Meet solo=true; pre-join=false; landing=false; stray video=false; call_end icon=true"
+    "PASS platforms Meet solo=true; pre-join=false; landing=false; stray video=false; call_end icon=true; Zoom/Teams/Webex leave-control=true; their lobbies=false; non-meeting urls=false"
   );
 } finally {
   if (originalHTMLMediaElement === undefined) {

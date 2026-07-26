@@ -37,9 +37,17 @@ export function platformForUrl(value) {
     host === "teams.microsoft.com" ||
     host === "teams.cloud.microsoft"
   ) {
+    /*
+     * The whole Teams web app lives under /v2/, so the path prefix alone means
+     * nothing. Key on the markers that only appear for a call: the meetup-join
+     * deep link, the pre-join route, and the join query parameter Teams sets
+     * when it hands off into a meeting.
+     */
     const callPath =
-      /\/(?:v2|meet|l\/meetup-join|_#\/conversations)(?:\/|$)/i.test(path) ||
-      url.hash.includes("meeting");
+      /\/(?:l\/)?meetup-join(?:\/|$)/i.test(path) ||
+      /\/meet(?:\/|$)/i.test(path) ||
+      /(?:pre-join-calling|meetup-join|\/meet\/)/i.test(url.hash) ||
+      url.searchParams.has("meetingjoin");
     return {
       id: "microsoftTeams",
       platform: "microsoft-teams",
@@ -74,24 +82,26 @@ export function callKey(url) {
   }
 }
 
-export function hasActiveMeetingMedia(root = document) {
-  const media = [...root.querySelectorAll("audio, video")];
-  const active = media.filter((element) => {
-    const stream = element.srcObject;
-    const hasLiveTrack =
-      stream &&
-      typeof stream.getTracks === "function" &&
-      stream.getTracks().some((track) => track.readyState === "live");
-    return (
-      hasLiveTrack ||
-      (element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-        !element.paused &&
-        !element.ended)
-    );
-  });
+/*
+ * Labels for the control that leaves a call, across Zoom, Teams, and Webex.
+ * Anchored at both ends so "Leave feedback" does not match; keyboard hints like
+ * "Leave (Ctrl+Shift+H)" are stripped before testing. English only for now —
+ * a localized UI falls back to no prompt, which is the safe direction.
+ */
+const LEAVE_CONTROL_LABEL =
+  /^(?:leave(?:\s+(?:the\s+)?(?:call|meeting|room))?|hang\s*up|end\s+(?:the\s+)?(?:call|meeting))$/i;
 
-  const videos = media.filter((element) => element.tagName === "VIDEO");
-  return active.length > 0 && (media.length > 1 || videos.length > 1);
+function hasLeaveControl(root) {
+  const controls = [...root.querySelectorAll("button, [role='button']")];
+
+  return controls.some((control) =>
+    ["aria-label", "data-tooltip", "title"].some((attribute) => {
+      const label = control.getAttribute?.(attribute);
+      if (!label) return false;
+      // drop a trailing keyboard hint: "Leave (Ctrl+Shift+H)" -> "Leave"
+      return LEAVE_CONTROL_LABEL.test(label.replace(/\s*\([^)]*\)\s*$/, "").trim());
+    })
+  );
 }
 
 function hasGoogleMeetInCallChrome(root) {
@@ -138,11 +148,23 @@ export function detectInCall(url = location.href, root = document) {
   }
 
   /*
-   * Zoom, Teams, and Webex in-call chrome has not been measured. Preserve their
-   * existing URL-plus-media behavior instead of guessing platform selectors.
+   * Zoom, Teams, and Webex in-call chrome has not been measured on a real call,
+   * so there is no platform-specific selector to key on the way Meet's
+   * `call_end` ligature works. Two rejected alternatives:
+   *
+   *   - Requiring active media. This is the test that missed Meet entirely on a
+   *     solo call with the camera off: it under-fires exactly when it matters.
+   *   - The URL alone. Every one of these URLs is reached at a pre-join lobby
+   *     first, so it would prompt before the user has joined anything, and
+   *     again for any tab left open on a meeting page.
+   *
+   * A leave control is the one thing every call UI has and no lobby does — the
+   * same class of signal as Meet's, just matched on the accessible label rather
+   * than a measured selector. Being wrong here means no prompt, never a wrong
+   * prompt. Replace per platform as each one's chrome gets measured on a call.
    */
   return {
-    active: platform.urlStrongSignal && hasActiveMeetingMedia(root),
+    active: platform.urlStrongSignal && hasLeaveControl(root),
     platform
   };
 }
