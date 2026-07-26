@@ -19,26 +19,46 @@ note.
 ## Requirements
 
 - macOS 14.4 or newer, Apple silicon (transcription runs on MLX)
-- Xcode Command Line Tools — `xcode-select --install` (builds the recorder)
-- [uv](https://docs.astral.sh/uv/getting-started/installation/)
-- [Claude Code](https://claude.com/claude-code) on your PATH, signed in
+- [Claude Code](https://claude.com/claude-code) on your PATH, signed in — it
+  writes the notes, and it needs a paid Anthropic plan. Quill itself is free;
+  this part is not.
 - Optional: [Obsidian](https://obsidian.md), to read the notes as a vault
 
 ## Install
+
+```sh
+curl -fsSL https://tannnnnnnnnnnnn.github.io/Quill/install.sh | sh
+```
+
+That installs [uv](https://docs.astral.sh/uv/) if you don't have it, downloads
+the prebuilt recorder, installs the pipeline into `~/.local/share/quill`, puts
+`meet` on your PATH, and then asks where your notes should go.
+
+It finishes by running `meet doctor`, which records four seconds and checks
+what came back — because macOS will not tell you whether a permission was
+granted, it will just hand you silence.
+
+<details>
+<summary>From source instead</summary>
+
+Needs Xcode Command Line Tools (`xcode-select --install`) to build the recorder.
 
 ```sh
 git clone https://github.com/tannnnnnnnnnnnn/Quill.git
 cd Quill
 make setup          # uv sync + build Audiocap.app
 uv run meet init    # your name, notes folder, recordings folder, login agent
+uv run meet doctor  # prove recording works
 ```
+</details>
 
 `meet init` writes `~/.config/quill/config.json` and, if you want the menu bar
 app at login, `~/Library/LaunchAgents/com.quill.menubar.plist`. Nothing about
 your machine lives in the repo.
 
-Quill builds its recorder from source and signs it ad hoc, so there is no
-notarized download — that is why the Xcode Command Line Tools are required.
+The recorder is signed ad hoc, not with an Apple Developer certificate. The
+installer works anyway because `curl` does not set the quarantine attribute a
+browser download would, so Gatekeeper never sees it.
 
 ## Layout
 
@@ -71,11 +91,13 @@ System Audio Recording Only → enable Audiocap
 meet start --title "Standup"   # or click 🎙 in the menu bar
 meet stop                      # stop → transcribe → Claude → note ready
 meet status
+meet doctor                    # check the install; proves recording works
 meet enroll                    # 24s voice sample; keeps room audio off your track
 meet ask "what did we decide about X?"   # Q&A over all your meetings
 meet transcribe <dir>          # re-run stages on an old recording
 meet process <dir>
-meet serve                     # browser-extension API on 127.0.0.1:8787
+meet menubar                   # run the menu bar app in this terminal
+meet serve                     # browser-extension API, if you aren't running the menu bar app
 ```
 
 **Call detection:** the menu bar app watches for a meeting — native app
@@ -100,9 +122,17 @@ changes.
 Me/Them lines within a few seconds of speech (12s tail window re-transcribed
 every 4s, sentence-settled, deduped). Toggle: menu → "Live Transcript".
 
-**Browser extension:** run `uv run meet serve` to expose Quill's recording
-controls and live transcript to the extension. The server listens only on
-`127.0.0.1:8787`; leave it running while using Quill in Chrome.
+<a id="browser-extension"></a>
+
+**Browser extension:** the menu bar app serves the extension API on
+`127.0.0.1:8787` by itself, so if Quill is in your menu bar the extension
+works. `meet serve` is only for running it without the menu bar app.
+
+To add the extension: open `chrome://extensions`, turn on **Developer mode**,
+click **Load unpacked**, and choose the `extension/` folder inside your Quill
+install (`~/.local/share/quill/extension` if you used the installer). Chrome
+will remind you about developer mode on every restart until Quill is in the
+Chrome Web Store.
 
 **Meeting index:** every processed call adds a one-line summary to
 `Meetings/INDEX.md` in your notes folder — a glanceable list of which call was

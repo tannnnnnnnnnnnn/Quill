@@ -40,6 +40,8 @@ class QuillBar(rumps.App):
                      self.dash_item, self.ask_item, self.todo_item, self.open_item, None,
                      self.detect_item, self.live_item]
         threading.Thread(target=dashboard.serve, daemon=True).start()
+        from . import server
+        threading.Thread(target=server.serve_forever_on_thread, daemon=True).start()
         self.processing = False
         self.detect_enabled = True
         self.live_visible = True   # auto-open the panel for each new recording
