@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quill</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <header class="brand">
+        <img src="icons/mark.png" alt="" width="24" height="22">
+        <span>Quill</span>
+      </header>
+
+      <section class="status-card" aria-live="polite">
+        <div class="status-row">
+          <span class="status-dot" id="connectionDot" data-state="checking"></span>
+          <div>
+            <div class="status-label">Local app</div>
+            <div class="status-value" id="connectionText">Checking…</div>
+          </div>
+        </div>
+        <div class="recording-state">
+          <span id="recordingLabel">Idle</span>
+          <time id="elapsed">0:00</time>
+        </div>
+      </section>
+
+      <p class="offline-message" id="offlineMessage" hidden>
+        Quill isn't running. Open the Quill menu-bar app, then try again.
+      </p>
+
+      <button class="record-button" id="recordButton" type="button" disabled>
+        Start recording
+      </button>
+
+      <button class="options-link" id="optionsLink" type="button">
+        Extension settings
+        <span aria-hidden="true">→</span>
+      </button>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

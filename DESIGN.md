@@ -40,7 +40,7 @@ detect call ──▶ popup card ──▶ record ──▶ live transcript ─�
                                                                 │
                                               Claude: note · TODO · people · memory
                                                                 │
-                                                     Obsidian vault "AI Brain"
+                                                       your notes folder
 ```
 
 1. **Detect** — menu bar agent polls every 3s: is the mic live AND a meeting
@@ -116,12 +116,13 @@ Quill/
 ├── capture/          audiocap.swift + Info.plist → bin/Audiocap.app
 ├── prompts/meeting.md   Claude's per-meeting instructions
 ├── assets/           menubar.png (template icon), quill.svg (logo seed)
-├── launchd/com.tanmay.quill-menubar.plist
+├── extension/        Chrome extension (MV3) + local API client
+├── docs/             landing page (GitHub Pages)
 └── DESIGN.md         this brief
 ```
 
-Data: recordings in `~/Meetings/`, notes in `~/Desktop/AI Brain/Meetings/`,
-memory in the Claude project store.
+Data: recordings and notes go to the folders chosen by `meet init` (defaults
+`~/Meetings/` and `~/Desktop/AI Brain/`), memory in the Claude project store.
 
 ## Deliverables wishlist (priority order)
 

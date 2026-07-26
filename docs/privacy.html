@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy — Quill</title>
+  <meta name="description" content="What the Quill Chrome extension reads, what it never reads, and where your recordings live.">
+  <meta name="robots" content="index,follow">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preload" href="assets/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Quill home"><img src="assets/quill-logo.png" alt="" width="30" height="30"><span>Quill</span></a>
+      <div class="nav-links"><a href="index.html">Home</a><a href="https://github.com/tannnnnnnnnnnnn/Quill">Source</a></div>
+    </nav>
+
+    <main class="doc">
+      <h1>Privacy</h1>
+      <p class="doc-lede">Quill has no servers. There is no account, no analytics, and no
+      telemetry. Nobody but you can see your meetings, because there is nowhere
+      for them to go.</p>
+      <p class="doc-updated">Last updated 26 July 2026</p>
+
+      <h2>What the Chrome extension reads</h2>
+      <p>The extension exists to notice that you are on a call and to relay two
+      buttons — start and stop — to the Quill app running on your own Mac. To do
+      that it reads:</p>
+      <ul>
+        <li>The <b>URL and title</b> of tabs on the supported meeting sites, to tell a
+        meeting apart from a calendar page or a landing page.</li>
+        <li>The <b>numeric tab ID</b>, so a recording is tied to the tab that started it.</li>
+        <li>Whether the page is <b>showing in-call controls</b> — for Google Meet, the
+        presence of the hang-up button. This is a structural check on the page,
+        not a reading of its contents.</li>
+      </ul>
+
+      <h2>What it never reads</h2>
+      <ul>
+        <li>Meeting chat, captions, or participant names.</li>
+        <li>Page text, form fields, cookies, or credentials.</li>
+        <li>Your browsing outside the meeting sites listed below. The extension has
+        no access to any other site.</li>
+      </ul>
+      <p>The extension never touches your microphone or camera. Audio capture is
+      done by the Quill app on your Mac, under macOS's own microphone and
+      system-audio permissions, which you grant separately and can revoke in
+      System Settings.</p>
+
+      <h2>Where your data lives</h2>
+      <p>Audio, transcripts, and notes are written to folders on your Mac that you
+      choose during setup. Transcription runs on-device. The extension talks to
+      one address and one address only — <code>http://127.0.0.1:8787</code>, a
+      loopback address that never leaves your computer.</p>
+      <p>The one step that reaches the internet is the last one: Quill hands the
+      finished transcript to Claude Code to write your note, which sends it to
+      Anthropic under
+      <a href="https://www.anthropic.com/legal/privacy">Anthropic's privacy policy</a>.
+      Everything before that is local. If you do not want that step, run
+      <code>meet stop --no-process</code> and keep the transcript alone.</p>
+
+      <h2>What is stored in Chrome</h2>
+      <p>The extension keeps your preferences — the local server address, which
+      meeting sites are enabled, and whether it may prompt automatically — in
+      <code>chrome.storage.sync</code>. If you are signed into Chrome, Google syncs
+      that between your own browsers. It holds settings only, never meeting
+      content.</p>
+
+      <h2>Permissions, and why each one exists</h2>
+      <ul>
+        <li><code>storage</code> — saves the preferences described above.</li>
+        <li><code>tabs</code> — lets the background worker follow a meeting tab as it
+        opens, changes, and closes. <code>activeTab</code> would not work, because a
+        call often continues in a tab you are not looking at.</li>
+        <li>Host access to <code>meet.google.com</code>, <code>*.zoom.us/wc/*</code>,
+        <code>teams.microsoft.com</code>, <code>teams.cloud.microsoft</code>, and
+        <code>*.webex.com</code> — detects calls on those sites and draws Quill's panel
+        there.</li>
+        <li>Host access to <code>127.0.0.1:8787</code> — reaches the Quill app on your
+        own machine.</li>
+      </ul>
+      <p>The extension does not request <code>&lt;all_urls&gt;</code>, scripting,
+      microphone, camera, downloads, or history.</p>
+
+      <h2>Consent</h2>
+      <p>Quill records every participant on a call, not only you. In many places
+      that requires their consent, and many employers require it whatever the
+      law says. Asking is on you.</p>
+
+      <h2>Changes</h2>
+      <p>Quill is open source. Every change to this policy and to the code behind
+      it is public in the
+      <a href="https://github.com/tannnnnnnnnnnnn/Quill">repository</a>. Questions go
+      in the <a href="https://github.com/tannnnnnnnnnnnn/Quill/issues">issue tracker</a>.</p>
+    </main>
+
+    <footer><div class="footer-brand"><img src="assets/quill-logo.png" alt="" width="22" height="22"><span>© 2026 Quill</span></div><div class="footer-links"><a href="index.html">Home</a><a href="https://github.com/tannnnnnnnnnnnn/Quill/issues">Support</a><a href="https://github.com/tannnnnnnnnnnnn/Quill">Source</a></div></footer>
+  </div>
+</body>
+</html>

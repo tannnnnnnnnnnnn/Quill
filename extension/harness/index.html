@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quill surface harness</title>
+    <link rel="stylesheet" href="harness.css">
+  </head>
+  <body>
+    <div class="meeting-stage">
+      <div class="meeting-copy">
+        <span class="eyebrow">Static UI harness</span>
+        <h1>Design sync</h1>
+        <p>Mock meeting page — no Quill server or Chrome APIs required.</p>
+      </div>
+      <div class="participant-grid" aria-hidden="true">
+        <div><span>AK</span></div>
+        <div><span>TS</span></div>
+        <div><span>JM</span></div>
+        <div><span>RL</span></div>
+      </div>
+    </div>
+
+    <aside class="harness-controls">
+      <div>
+        <strong>Surface state</strong>
+        <output id="state">idle</output>
+      </div>
+      <button id="detected" type="button">Show detected card</button>
+      <button id="demo" type="button">Run full transition</button>
+      <button id="reset" type="button">Reset to idle</button>
+      <p>Full transition: idle → detected → loading → live lines → closed.</p>
+    </aside>
+
+    <script type="module" src="harness.js"></script>
+  </body>
+</html>

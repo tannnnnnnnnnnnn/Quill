@@ -1,10 +1,12 @@
 """meet — record, transcribe, and process meetings.
 
+  meet init
   meet start [--title T] [--max-hours H]
   meet stop [--no-process]
   meet status
   meet transcribe <dir>
   meet process <dir>
+  meet serve
 """
 
 import argparse
@@ -26,6 +28,9 @@ def main() -> None:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
 
+    s = sub.add_parser("init", help="write per-user settings and the login agent")
+    s.add_argument("--no-login-agent", action="store_true")
+
     s = sub.add_parser("start", help="start recording")
     s.add_argument("--title", default=None)
     s.add_argument("--max-hours", type=float, default=config.MAX_HOURS)
@@ -42,9 +47,13 @@ def main() -> None:
     s.add_argument("question", nargs="+")
 
     sub.add_parser("dashboard", help="open the Quill dashboard in your browser")
+    sub.add_parser("serve", help="serve the local browser-extension API")
 
     a = p.parse_args()
-    if a.cmd == "start":
+    if a.cmd == "init":
+        from . import init
+        init.run(login_agent=not a.no_login_agent)
+    elif a.cmd == "start":
         d = record.start(a.title, a.max_hours)
         print(f"recording → {d}\nstop with: meet stop")
     elif a.cmd == "stop":
@@ -68,6 +77,9 @@ def main() -> None:
         from . import dashboard
         import subprocess as sp
         sp.run(["open", dashboard.URL])
+    elif a.cmd == "serve":
+        from . import server
+        server.serve()
     sys.exit(0)
 
 
