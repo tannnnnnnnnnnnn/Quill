@@ -502,6 +502,26 @@ class _Handler(BaseHTTPRequestHandler):
             self._send({"error": str(e)}, 500)
 
 
+def serve_forever_on_thread() -> None:
+    """Serve the extension API from a daemon thread inside the menu bar app, so
+    the extension works the moment Quill is running and nobody has to know that
+    `meet serve` exists. No signal handling here — `signal.signal` only works on
+    the main thread — and a port already in use means a standalone `meet serve`
+    is up, which is the same service, so say so and leave it alone."""
+    try:
+        httpd = _HTTPServer((HOST, PORT), _Handler)
+    except OSError as e:
+        print(f"extension server: not started ({e})", flush=True)
+        return
+    httpd.quill = QuillServer()
+    print(f"extension server listening on http://{HOST}:{PORT}", flush=True)
+    try:
+        httpd.serve_forever()
+    finally:
+        httpd.server_close()
+        httpd.quill.close()
+
+
 def serve() -> None:
     """Serve the extension API until interrupted. Always binds to loopback."""
     quill = QuillServer()

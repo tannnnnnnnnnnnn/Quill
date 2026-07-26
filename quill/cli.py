@@ -1,6 +1,7 @@
 """meet — record, transcribe, and process meetings.
 
   meet init
+  meet doctor
   meet enroll [--from-file F]
   meet start [--title T] [--max-hours H]
   meet stop [--no-process]
@@ -34,6 +35,8 @@ def main() -> None:
     s = sub.add_parser("init", help="write per-user settings and the login agent")
     s.add_argument("--no-login-agent", action="store_true")
 
+    sub.add_parser("doctor", help="check the install and prove recording works")
+
     s = sub.add_parser("enroll", help="record a voice sample so your track keeps "
                                       "your speech and not the room's")
     s.add_argument("--from-file", default=None,
@@ -55,12 +58,16 @@ def main() -> None:
     s.add_argument("question", nargs="+")
 
     sub.add_parser("dashboard", help="open the Quill dashboard in your browser")
+    sub.add_parser("menubar", help="run the menu bar app in this terminal")
     sub.add_parser("serve", help="serve the local browser-extension API")
 
     a = p.parse_args()
     if a.cmd == "init":
         from . import init
         init.run(login_agent=not a.no_login_agent)
+    elif a.cmd == "doctor":
+        from . import doctor
+        sys.exit(1 if doctor.run() else 0)
     elif a.cmd == "enroll":
         from . import speaker
         used, threshold = speaker.enroll(
@@ -93,6 +100,9 @@ def main() -> None:
         from . import dashboard
         import subprocess as sp
         sp.run(["open", dashboard.URL])
+    elif a.cmd == "menubar":
+        from . import menubar
+        menubar.main()
     elif a.cmd == "serve":
         from . import server
         server.serve()

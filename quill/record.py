@@ -82,6 +82,48 @@ def start(title: str | None = None, max_hours: float = config.MAX_HOURS) -> str:
         return str(d)
 
 
+def capture(seconds: int, workdir, progress=print):
+    """Record a fixed-length clip outside the meeting state machine, for voice
+    enrolment and the permission check. Returns (me, them) track paths; Audiocap
+    always writes both, and callers may ignore either."""
+    from pathlib import Path
+    workdir = Path(workdir)
+
+    if not config.APP.exists():
+        raise SystemExit(
+            f"Audiocap.app missing — run `make build` first ({config.APP})")
+
+    workdir.mkdir(parents=True, exist_ok=True)
+    for name in (".ready", ".done", "audiocap.pid"):
+        (workdir / name).unlink(missing_ok=True)
+
+    subprocess.run(["open", "-na", str(config.APP), "--args",
+                    str(workdir), str(seconds + 5)], check=True)
+
+    for _ in range(120):
+        if (workdir / ".ready").exists():
+            break
+        time.sleep(0.5)
+    else:
+        raise SystemExit("recorder never became ready — check microphone permission")
+
+    for left in range(seconds, 0, -1):
+        progress(f"  recording… {left:>2}s ", end="\r", flush=True)
+        time.sleep(1)
+    progress(" " * 44, end="\r")
+
+    (workdir / ".done").write_text("")
+    for _ in range(60):
+        if not (workdir / "audiocap.pid").exists():
+            break
+        time.sleep(0.5)
+
+    me, them = workdir / "me.caf", workdir / "them.caf"
+    if not me.exists():
+        raise SystemExit("no microphone audio captured — check permissions")
+    return me, them
+
+
 def stop() -> dict:
     with _control_lock():
         st = current()

@@ -23,7 +23,6 @@ Everything runs locally on CPU. The model is ~26 MB, fetched once.
 
 import hashlib
 import shutil
-import subprocess
 import urllib.request
 import wave
 from pathlib import Path
@@ -186,47 +185,6 @@ def is_me(samples: np.ndarray, profile) -> bool | None:
 
 
 # --- enrolment -------------------------------------------------------------
-def _record(seconds: int, workdir: Path, progress=print) -> Path:
-    """Capture the microphone with Audiocap, the same helper the recorder uses,
-    and return the mic track. Audiocap owns both tracks; only `me.caf` matters
-    here, and the system track is discarded with the directory."""
-    import time
-
-    if not config.APP.exists():
-        raise SystemExit(
-            f"Audiocap.app missing — run `make build` first ({config.APP})")
-
-    workdir.mkdir(parents=True, exist_ok=True)
-    for name in (".ready", ".done", "audiocap.pid"):
-        (workdir / name).unlink(missing_ok=True)
-
-    subprocess.run(["open", "-na", str(config.APP), "--args",
-                    str(workdir), str(seconds + 5)], check=True)
-
-    for _ in range(120):
-        if (workdir / ".ready").exists():
-            break
-        time.sleep(0.5)
-    else:
-        raise SystemExit("recorder never became ready — check microphone permission")
-
-    for left in range(seconds, 0, -1):
-        progress(f"  recording… {left:>2}s ", end="\r", flush=True)
-        time.sleep(1)
-    progress(" " * 44, end="\r")
-
-    (workdir / ".done").write_text("")
-    for _ in range(60):
-        if not (workdir / "audiocap.pid").exists():
-            break
-        time.sleep(0.5)
-
-    mic = workdir / "me.caf"
-    if not mic.exists():
-        raise SystemExit("no microphone audio captured — check permissions")
-    return mic
-
-
 def _load_wav(path: Path) -> tuple[np.ndarray, int]:
     with wave.open(str(path)) as w:
         sr = w.getframerate()
@@ -245,9 +203,10 @@ def enroll(audio_path: Path | None = None, progress=print) -> tuple[int, float]:
     try:
         if audio_path is None:
             progress(ENROLL_SCRIPT)
-            # Audiocap writes a directory; only the mic track matters here
+            # Audiocap writes both tracks; only the mic one matters here
+            from . import record
             workdir = config.SETTINGS_PATH.parent / "enroll-recording"
-            audio_path = _record(ENROLL_SECONDS, workdir, progress)
+            audio_path, _ = record.capture(ENROLL_SECONDS, workdir, progress)
 
         # no mic filter: the gate scores raw audio, so enrol on raw audio too
         if transcribe._to_wav16(audio_path, tmp, mic=False) <= 0:
