@@ -1,0 +1,24 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # Apple silicon: the recorder is Swift + Core Audio and the pipeline is MLX,
+    # so an Intel or Linux runner cannot build or install this at all.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build the recorder
+        run: make build
+      - name: Install
+        run: uv sync
+      - name: Test
+        run: make test
