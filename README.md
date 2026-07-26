@@ -5,25 +5,55 @@ transcribes on-device, then Claude Code turns each meeting into an Obsidian note
 rolling TODO, people notes, and persistent memory.
 
 ```
-capture (Audiocap.app) ─▶ transcribe (parakeet-mlx) ─▶ claude -p ─▶ AI Brain vault + memory
+capture (Audiocap.app) ─▶ transcribe (parakeet-mlx) ─▶ claude -p ─▶ vault + memory
 ```
+
+Nothing leaves your machine. Audio, transcripts, and notes stay in local
+folders; the only network calls are the ones Claude Code makes to write your
+note.
+
+> **Consent.** Quill records everyone on the call, not only you. Many places
+> require every participant's consent before you may do that, and many
+> employers require it regardless of the law. Ask first.
+
+## Requirements
+
+- macOS 14.4 or newer, Apple silicon (transcription runs on MLX)
+- Xcode Command Line Tools — `xcode-select --install` (builds the recorder)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- [Claude Code](https://claude.com/claude-code) on your PATH, signed in
+- Optional: [Obsidian](https://obsidian.md), to read the notes as a vault
+
+## Install
+
+```sh
+git clone https://github.com/tannnnnnnnnnnnn/Quill.git
+cd Quill
+make setup          # uv sync + build Audiocap.app
+uv run meet init    # your name, notes folder, recordings folder, login agent
+```
+
+`meet init` writes `~/.config/quill/config.json` and, if you want the menu bar
+app at login, `~/Library/LaunchAgents/com.quill.menubar.plist`. Nothing about
+your machine lives in the repo.
+
+Quill builds its recorder from source and signs it ad hoc, so there is no
+notarized download — that is why the Xcode Command Line Tools are required.
 
 ## Layout
 
 - `capture/audiocap.swift` — Core Audio process-tap recorder → `them.caf` (system) + `me.caf` (mic)
 - `quill/` — Python pipeline: `record` `transcribe` `process` `cli` `menubar`
 - `prompts/meeting.md` — instructions Claude runs per meeting
-- Recordings: `~/Meetings/<date>-<title>/` (audio compressed to m4a after transcription)
-- Output: `~/Desktop/AI Brain/Meetings/`, `Meetings/Transcripts/`, `People/`, `TODO.md`
-- Claude memory: `~/.claude/projects/-Users-tanmayshah-Desktop-Custom-Granola/memory/`
+- `extension/` — Chrome extension (MV3) that drives Quill from browser calls
+- `docs/` — the landing page (served by GitHub Pages)
+- Recordings: `<recordings folder>/<date>-<title>/` (audio compressed to m4a after transcription)
+- Output: `<notes folder>/Meetings/`, `Meetings/Transcripts/`, `People/`, `TODO.md`
+- Claude memory: `~/.claude/projects/<slugified project path>/memory/`
 
-## Setup (already done by Claude)
+## Permissions
 
-```sh
-make setup          # uv sync + build Audiocap.app
-```
-
-One-time permissions, first recording only: allow **Audiocap** for
+One-time, first recording only: allow **Audiocap** for
 **Microphone** and **System Audio Recording**. The system-audio prompt is easy
 to dismiss and macOS never re-asks — grant manually:
 System Settings → Privacy & Security → Screen & System Audio Recording →
@@ -64,7 +94,8 @@ controls and live transcript to the extension. The server listens only on
 `127.0.0.1:8787`; leave it running while using Quill in Chrome.
 
 **Meeting index:** every processed call adds a one-line summary to
-`AI Brain/Meetings/INDEX.md` — glanceable list of which call was about what.
+`Meetings/INDEX.md` in your notes folder — a glanceable list of which call was
+about what.
 
 **Ask Quill** (menu bar → Ask Quill…): answers questions from your notes,
 transcripts, and TODO — cited by meeting, read-only; every Q&A is logged to
@@ -76,16 +107,20 @@ summaries, ask-anything, and a live todo list — reads/writes the vault directl
 Night mode toggle in the header. Per-meeting **↻ Enhance** re-transcribes old
 recordings with the current models; **✕** deletes a meeting everywhere.
 
-Menu bar: `uv run python -m quill.menubar`. Auto-start at login:
+Menu bar: `uv run python -m quill.menubar`. To start it at login, run
+`meet init` (which writes the agent) and then:
 
 ```sh
-cp launchd/com.tanmay.quill-menubar.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.tanmay.quill-menubar.plist
+launchctl load ~/Library/LaunchAgents/com.quill.menubar.plist
 ```
 
 ## Config
 
-Edit `quill/config.py`: vault path, model, `KEEP_AUDIO` (`m4a`/`raw`/`delete`), max hours.
+`~/.config/quill/config.json` holds your settings — `user_name`, `vault`, and
+`data`. Re-run `meet init` to change them, or edit the file directly.
+
+Everything else lives in `quill/config.py`: models, `KEEP_AUDIO`
+(`m4a`/`raw`/`delete`), chunk size, max hours.
 
 ## Troubleshooting
 
@@ -93,5 +128,8 @@ Edit `quill/config.py`: vault path, model, `KEEP_AUDIO` (`m4a`/`raw`/`delete`), 
 - Transcription slow first run → 600 MB model download, cached afterwards.
 - Claude step fails → read `claude.log` inside the recording dir, re-run with `meet process <dir>`.
 - Recorder stuck → `meet status`; stale state clears itself; worst case `pkill audiocap`.
+- Notes land in the wrong place → check `~/.config/quill/config.json`, or re-run `meet init`.
 
-Recording calls may require participant consent in your region/company — check before using on real calls.
+## License
+
+MIT — see [LICENSE](LICENSE).

@@ -29,7 +29,13 @@ def vocative(name: str, text: str) -> bool:
     """True when the line ADDRESSES `name` — a greeting or direct question to
     them. People don't address themselves, so a mic-track ("Me") line that
     matches is almost certainly bleed from the other side. Deliberately tight:
-    "Hi Tanmay…" / "Tanmay, can you…" match; "This is Tanmay" does not."""
+    "Hi Tanmay…" / "Tanmay, can you…" match; "This is Tanmay" does not.
+
+    An empty `name` disables the guard — with no name to address, every
+    greeting would otherwise match."""
+    if not name.strip():
+        return False
+    name = _re.escape(name.strip())
     pat = _re.compile(
         rf"^\W{{0,4}}(?:(?:hi|hello|hey)[, ]+{name}\b"
         rf"|{name}[, ]+(?:can|could|are|do|did|what|how|is|will|would)\b)",

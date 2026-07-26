@@ -1,3 +1,5 @@
+import json
+import os
 import re
 from pathlib import Path
 
@@ -6,8 +8,18 @@ APP = PROJECT / "bin" / "Audiocap.app"
 BIN_DIR = PROJECT / "bin"
 PROMPT = PROJECT / "prompts" / "meeting.md"
 
+# User settings: ~/.config/quill/config.json, or $QUILL_CONFIG. Written by
+# `meet init`. Keys: vault, data, user_name. Missing file = defaults below.
+SETTINGS_PATH = Path(
+    os.environ.get("QUILL_CONFIG", Path.home() / ".config" / "quill" / "config.json")
+)
+try:
+    _settings = json.loads(SETTINGS_PATH.read_text())
+except (OSError, ValueError):
+    _settings = {}
+
 # Obsidian vault
-VAULT = Path.home() / "Desktop" / "AI Brain"
+VAULT = Path(_settings.get("vault", Path.home() / "Desktop" / "AI Brain")).expanduser()
 NOTES_DIR = VAULT / "Meetings"
 TRANSCRIPTS_DIR = VAULT / "Meetings" / "Transcripts"
 PEOPLE_DIR = VAULT / "People"
@@ -23,10 +35,11 @@ MEMORY_DIR = (
 )
 
 # Recording data (audio stays out of the vault)
-DATA = Path.home() / "Meetings"
+DATA = Path(_settings.get("data", Path.home() / "Meetings")).expanduser()
 STATE = DATA / ".recording.json"
 
-USER_NAME = "Tanmay"   # vocative guard: lines addressing this name are Them
+# vocative guard: lines addressing this name are Them
+USER_NAME = _settings.get("user_name", "")
 
 MODEL = "mlx-community/parakeet-tdt-0.6b-v2"            # live panel (speed)
 LIVE_MODE = "window"       # "window" = proven accurate; "stream" = experimental draft-tail mode

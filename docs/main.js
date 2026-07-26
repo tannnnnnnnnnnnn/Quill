@@ -1,4 +1,8 @@
-const CHROME_STORE_URL = "https://chrome.google.com/webstore/detail/quill/__EXTENSION_ID__";
+// Set this once the Web Store listing is approved; the extension ID appears in
+// the listing URL. While it is empty the install buttons point at the repo
+// instead, because there is nothing to add to Chrome yet.
+const CHROME_STORE_URL = "";
+const REPO_URL = "https://github.com/tannnnnnnnnnnnn/Quill";
 
 (() => {
   "use strict";
@@ -11,7 +15,16 @@ const CHROME_STORE_URL = "https://chrome.google.com/webstore/detail/quill/__EXTE
   const motionDisabled = matchMedia("(hover: none), (pointer: coarse), (prefers-reduced-motion: reduce)");
 
   document.querySelectorAll("[data-chrome-link]").forEach((link) => {
-    link.href = CHROME_STORE_URL;
+    if (CHROME_STORE_URL) {
+      link.href = CHROME_STORE_URL;
+      return;
+    }
+    link.href = `${REPO_URL}#install`;
+    const label = link.querySelector("[data-chrome-label]");
+    if (label) {
+      label.textContent = "Install from GitHub";
+    }
+    link.querySelector(".chrome-mark")?.remove();
   });
 
   let band;
