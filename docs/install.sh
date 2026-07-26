@@ -103,13 +103,23 @@ Add this to your shell profile, then open a new terminal:
   export PATH=\"$BIN_DIR:\$PATH\"" ;;
 esac
 
-if [ -t 0 ] || [ -r /dev/tty ]; then
+# `meet init` asks questions, but piping this script into sh means stdin is the
+# script. Borrow the terminal — and check by opening it, not by testing that it
+# exists, because /dev/tty is present but unusable under cron, CI and some
+# sandboxes. Never fail the install over this; the two commands are printable.
+if (exec < /dev/tty) 2>/dev/null; then
   say "
 Setup — where your notes and recordings go:"
-  "$BIN_DIR/meet" init < /dev/tty || die "setup did not finish; run \`meet init\` yourself."
-  say "
+  if "$BIN_DIR/meet" init < /dev/tty; then
+    say "
 Checking that recording actually works:"
-  "$BIN_DIR/meet" doctor < /dev/tty || true
+    "$BIN_DIR/meet" doctor < /dev/tty || true
+  else
+    say "
+Setup did not finish. Run it yourself:
+  meet init
+  meet doctor"
+  fi
 else
   say "
 Installed. Finish with:
