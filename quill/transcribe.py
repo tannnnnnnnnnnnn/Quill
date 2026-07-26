@@ -136,10 +136,13 @@ def run(d: str | Path, progress=print) -> Path:
             sysx, _ = bleedguard.load_wav(tracks["them"])
             them_idx = [(t["start"], t["end"], norm(t["text"])) for t in segs["them"]]
             keep, flipped, dropped = [], [], 0
-            silent = 0
+            silent = looped = 0
             for e in segs["me"]:
                 if bleedguard.is_silent(micx, sr, e["start"], e["end"]):
                     silent += 1        # AEC'd near-silence → ASR hallucination
+                    continue
+                if bleedguard.is_degenerate(e["text"]):
+                    looped += 1        # room noise above the floor, same result
                     continue
                 if bleedguard.is_bleed(micx, sysx, sr, e["start"], e["end"]):
                     n = norm(e["text"])
@@ -153,10 +156,14 @@ def run(d: str | Path, progress=print) -> Path:
                         flipped.append(e)
                 else:
                     keep.append(e)
+            before = len(keep)
+            keep = bleedguard.drop_echoes(keep)
+            looped += before - len(keep)
             segs["me"] = keep
             segs["them"] = sorted(segs["them"] + flipped, key=lambda x: x["start"])
             progress(f"bleed guard: {len(keep)} Me kept, {len(flipped)} relabeled "
-                     f"Them, {dropped} dropped, {silent} silent-gated")
+                     f"Them, {dropped} dropped, {silent} silent-gated, "
+                     f"{looped} loop-gated")
             raw.unlink(missing_ok=True)
 
     body = merge(segs.get("me", []), segs.get("them", []))
