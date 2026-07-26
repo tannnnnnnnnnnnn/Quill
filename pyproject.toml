@@ -8,6 +8,7 @@ dependencies = [
     "imageio-ffmpeg>=0.5",
     "rumps>=0.4",
     "mlx-whisper>=0.4.3",
+    "onnxruntime>=1.28.0",
 ]
 
 [project.scripts]

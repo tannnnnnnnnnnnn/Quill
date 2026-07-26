@@ -1,6 +1,7 @@
 """meet — record, transcribe, and process meetings.
 
   meet init
+  meet enroll [--from-file F]
   meet start [--title T] [--max-hours H]
   meet stop [--no-process]
   meet status
@@ -33,6 +34,11 @@ def main() -> None:
     s = sub.add_parser("init", help="write per-user settings and the login agent")
     s.add_argument("--no-login-agent", action="store_true")
 
+    s = sub.add_parser("enroll", help="record a voice sample so your track keeps "
+                                      "your speech and not the room's")
+    s.add_argument("--from-file", default=None,
+                   help="use an existing recording instead of the microphone")
+
     s = sub.add_parser("start", help="start recording")
     s.add_argument("--title", default=None)
     s.add_argument("--max-hours", type=float, default=config.MAX_HOURS)
@@ -55,6 +61,12 @@ def main() -> None:
     if a.cmd == "init":
         from . import init
         init.run(login_agent=not a.no_login_agent)
+    elif a.cmd == "enroll":
+        from . import speaker
+        used, threshold = speaker.enroll(
+            Path(a.from_file).expanduser() if a.from_file else None)
+        print(f"voice profile saved → {speaker.PROFILE_PATH}\n"
+              f"{used} windows, match threshold {threshold:.2f}")
     elif a.cmd == "start":
         d = record.start(a.title, a.max_hours)
         print(f"recording → {d}\nstop with: meet stop")
@@ -66,6 +78,8 @@ def main() -> None:
     elif a.cmd == "status":
         st = record.current()
         print(f"recording since {st['started']} → {st['dir']}" if st else "idle")
+        from . import speaker
+        print(speaker.describe())
     elif a.cmd == "transcribe":
         transcribe.run(a.dir)
     elif a.cmd == "process":

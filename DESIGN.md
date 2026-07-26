@@ -122,7 +122,7 @@ Quill/
 ```
 
 Data: recordings and notes go to the folders chosen by `meet init` (defaults
-`~/Meetings/` and `~/Desktop/AI Brain/`), memory in the Claude project store.
+`~/Meetings/` and `~/Documents/Quill/`), memory in the Claude project store.
 
 ## Deliverables wishlist (priority order)
 

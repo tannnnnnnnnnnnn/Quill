@@ -19,7 +19,7 @@ except (OSError, ValueError):
     _settings = {}
 
 # Obsidian vault
-VAULT = Path(_settings.get("vault", Path.home() / "Desktop" / "AI Brain")).expanduser()
+VAULT = Path(_settings.get("vault", Path.home() / "Documents" / "Quill")).expanduser()
 NOTES_DIR = VAULT / "Meetings"
 TRANSCRIPTS_DIR = VAULT / "Meetings" / "Transcripts"
 PEOPLE_DIR = VAULT / "People"
@@ -40,6 +40,10 @@ STATE = DATA / ".recording.json"
 
 # vocative guard: lines addressing this name are Them
 USER_NAME = _settings.get("user_name", "")
+# how the prompts and transcript headers refer to whoever is recording; the
+# name is optional at setup, so fall back to something that reads correctly
+# in its place ("the user's action items", "**Me** = the person recording")
+WHO = USER_NAME or "the user"
 
 MODEL = "mlx-community/parakeet-tdt-0.6b-v2"            # live panel (speed)
 LIVE_MODE = "window"       # "window" = proven accurate; "stream" = experimental draft-tail mode

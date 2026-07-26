@@ -121,50 +121,79 @@ def run(d: str | Path, progress=print) -> Path:
         progress(f"transcribing {name} (whisper)...")
         segs[name] = _transcribe_track(wav)
 
+    # Both Me-track guards below read the RAW mic audio: the ASR mic chain
+    # loudness-normalizes, which erases the level cue the bleed guard needs and
+    # the timbre the speaker gate needs. Decode it once for both.
+    from . import bleedguard
+    raw = d / "me_raw16.wav"
+    micx = mic_sr = None
+    if segs.get("me"):
+        me_src = next((d / f"me{ext}" for ext in (".caf", ".m4a")
+                       if (d / f"me{ext}").exists()), None)
+        if me_src is not None and _to_wav16(me_src, raw, mic=False) > 0:
+            micx, mic_sr = bleedguard.load_wav(raw)
+
     # acoustic bleed guard: a "Me" segment whose raw-mic audio is a quiet,
     # envelope-correlated copy of the system audio is the speakers, not the
     # user (true even with the app-level mic muted). Relabel to Them when the
     # system-track ASR missed it; drop when it already exists there.
-    if segs.get("me") and "them" in tracks:
-        from . import bleedguard
+    if micx is not None and "them" in tracks:
         from .textmatch import MAX_ECHO_GAP, norm, similar
-        me_src = next((d / f"me{ext}" for ext in (".caf", ".m4a")
-                       if (d / f"me{ext}").exists()), None)
-        raw = d / "me_raw16.wav"
-        if me_src is not None and _to_wav16(me_src, raw, mic=False) > 0:
-            micx, sr = bleedguard.load_wav(raw)
-            sysx, _ = bleedguard.load_wav(tracks["them"])
-            them_idx = [(t["start"], t["end"], norm(t["text"])) for t in segs["them"]]
-            keep, flipped, dropped = [], [], 0
-            silent = looped = 0
-            for e in segs["me"]:
-                if bleedguard.is_silent(micx, sr, e["start"], e["end"]):
-                    silent += 1        # AEC'd near-silence → ASR hallucination
-                    continue
-                if bleedguard.is_degenerate(e["text"]):
-                    looped += 1        # room noise above the floor, same result
-                    continue
-                if bleedguard.is_bleed(micx, sysx, sr, e["start"], e["end"]):
-                    n = norm(e["text"])
-                    twin = any(ts <= e["end"] + MAX_ECHO_GAP
-                               and e["start"] <= te + MAX_ECHO_GAP
-                               and similar(n, tn)
-                               for ts, te, tn in them_idx)
-                    if twin:
-                        dropped += 1
-                    else:
-                        flipped.append(e)
+        sysx, _ = bleedguard.load_wav(tracks["them"])
+        them_idx = [(t["start"], t["end"], norm(t["text"])) for t in segs["them"]]
+        keep, flipped, dropped = [], [], 0
+        silent = looped = 0
+        for e in segs["me"]:
+            if bleedguard.is_silent(micx, mic_sr, e["start"], e["end"]):
+                silent += 1        # AEC'd near-silence → ASR hallucination
+                continue
+            if bleedguard.is_degenerate(e["text"]):
+                looped += 1        # room noise above the floor, same result
+                continue
+            if bleedguard.is_bleed(micx, sysx, mic_sr, e["start"], e["end"]):
+                n = norm(e["text"])
+                twin = any(ts <= e["end"] + MAX_ECHO_GAP
+                           and e["start"] <= te + MAX_ECHO_GAP
+                           and similar(n, tn)
+                           for ts, te, tn in them_idx)
+                if twin:
+                    dropped += 1
                 else:
-                    keep.append(e)
-            before = len(keep)
-            keep = bleedguard.drop_echoes(keep)
-            looped += before - len(keep)
+                    flipped.append(e)
+            else:
+                keep.append(e)
+        before = len(keep)
+        keep = bleedguard.drop_echoes(keep)
+        looped += before - len(keep)
+        segs["me"] = keep
+        segs["them"] = sorted(segs["them"] + flipped, key=lambda x: x["start"])
+        progress(f"bleed guard: {len(keep)} Me kept, {len(flipped)} relabeled "
+                 f"Them, {dropped} dropped, {silent} silent-gated, "
+                 f"{looped} loop-gated")
+
+    # speaker gate: the microphone hears the whole room and calls all of it Me —
+    # a colleague at the next desk, a TV, someone on the far side of the office.
+    # None of that is quieter than the user, so only the voice itself separates
+    # them. Relabel rather than drop: it was said, just not by the user. Without
+    # an enrolled profile there is nothing to compare against, so no gate.
+    if micx is not None:
+        from . import speaker
+        profile = speaker.load_profile()
+        if profile is not None:
+            keep, flipped = [], []
+            for e in segs["me"]:
+                seg = micx[max(0, int(e["start"] * mic_sr)):
+                           int(e["end"] * mic_sr)]
+                # None = too short to judge; keep, the gate must not guess
+                (flipped if speaker.is_me(seg, profile) is False
+                 else keep).append(e)
             segs["me"] = keep
-            segs["them"] = sorted(segs["them"] + flipped, key=lambda x: x["start"])
-            progress(f"bleed guard: {len(keep)} Me kept, {len(flipped)} relabeled "
-                     f"Them, {dropped} dropped, {silent} silent-gated, "
-                     f"{looped} loop-gated")
-            raw.unlink(missing_ok=True)
+            segs["them"] = sorted(segs.get("them", []) + flipped,
+                                  key=lambda x: x["start"])
+            progress(f"speaker gate: {len(keep)} Me kept, {len(flipped)} "
+                     f"relabeled Them (not the enrolled voice)")
+
+    raw.unlink(missing_ok=True)
 
     body = merge(segs.get("me", []), segs.get("them", []))
 
@@ -176,7 +205,8 @@ def run(d: str | Path, progress=print) -> Path:
         f"# Transcript: {meta.get('title') or d.name}\n\n"
         f"date: {meta.get('started', '')}  \n"
         f"duration: {meta.get('duration_minutes', '?')} min  \n"
-        f"speakers: **Me** = Tanmay, **Them** = other participants\n\n"
+        f"speakers: **Me** = {config.USER_NAME or 'the person recording'}, "
+        f"**Them** = other participants\n\n"
     )
     out = d / "transcript.md"
     out.write_text(header + body + "\n")

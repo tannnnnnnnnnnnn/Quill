@@ -49,7 +49,7 @@ def run(login_agent: bool = True) -> None:
 
     name = _ask("Your first name (used to spot bleed between tracks)", "")
     vault = _ask("Notes folder (an Obsidian vault works well)",
-                 str(Path.home() / "Desktop" / "AI Brain"))
+                 str(Path.home() / "Documents" / "Quill"))
     data = _ask("Recordings folder (audio, kept out of the notes folder)",
                 str(Path.home() / "Meetings"))
 
@@ -63,6 +63,8 @@ def run(login_agent: bool = True) -> None:
               Path(data).expanduser()):
         d.mkdir(parents=True, exist_ok=True)
     print(f"created {vault} and {data}")
+    print("\nOptional next step: `meet enroll` records 24 seconds of your voice, "
+          "so whatever else the microphone hears in the room is not quoted as you.")
 
     if not login_agent:
         return
