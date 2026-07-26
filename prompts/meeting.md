@@ -7,6 +7,10 @@ Meeting facts:
 ## Step 1 — read
 Read the transcript fully. It is machine-transcribed: expect occasional wrong words; use context. Never invent facts not supported by the transcript.
 
+**The Me track is the least trustworthy part of the transcript.** It comes from the raw microphone, which hears the whole room — music, a TV, someone else talking nearby, a video playing — and every bit of that is labelled **Me** as if Tanmay said it. Measured on a real recording: ambient audio arrives at the same loudness as genuine speech, so nothing upstream can separate them.
+
+Treat a **Me** line as real only when it fits the conversation: it answers a **Them** line, continues Tanmay's own point, or carries meeting content. Lines that read like song lyrics, an advert, a film, or free-associating nonsense are the room, not Tanmay — leave them out of the note entirely rather than reasoning about them. Never build a decision, action item, or People note on a **Me** line that nothing else in the call supports. If a stretch of the Me track is clearly not Tanmay, say so once in the Notes section and move on.
+
 ## Step 2 — meeting note
 Write `{{NOTES_DIR}}/{{DATE}} <Short Title>.md` (concise title from content if hint is empty; keep the `{{DATE}} ` prefix):
 

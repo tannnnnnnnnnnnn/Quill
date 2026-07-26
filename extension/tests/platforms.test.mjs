@@ -18,14 +18,26 @@ class FakeControl {
 }
 
 class FakeRoot {
-  constructor({ media = [], controls = [] } = {}) {
+  /* `frames` model same-origin iframes, which is how Zoom's web client ships
+     its entire meeting UI. `blindFrames` throw on contentDocument the way a
+     cross-origin frame does. */
+  constructor({ media = [], controls = [], frames = [], blindFrames = 0 } = {}) {
     this.media = media;
     this.controls = controls;
+    this.frames = [
+      ...frames.map((doc) => ({ contentDocument: doc })),
+      ...Array.from({ length: blindFrames }, () => ({
+        get contentDocument() {
+          throw new Error("cross-origin");
+        }
+      }))
+    ];
   }
 
   querySelectorAll(selector) {
     if (selector === "audio, video") return this.media;
     if (selector === "button, [role='button']") return this.controls;
+    if (selector === "iframe") return this.frames;
     return [];
   }
 }
@@ -176,8 +188,49 @@ try {
     );
   }
 
+  /*
+   * Measured on a real Zoom call, 2026-07-26: the web client puts its whole
+   * meeting UI in a same-origin iframe. The top document had 86 buttons and no
+   * meeting controls; descending into frames found 183 and the leave control.
+   * Its label is bare "End" for the host, not "Leave".
+   */
+  const zoomLikeTab = new FakeRoot({
+    controls: [new FakeControl({ label: "Search" })],
+    blindFrames: 1,
+    frames: [
+      new FakeRoot({ controls: [] }),
+      new FakeRoot({ controls: [new FakeControl({ label: "End" })] })
+    ]
+  });
+  assert.equal(
+    detectInCall("https://app.zoom.us/wc/71587776655/start", zoomLikeTab).active,
+    true,
+    "Zoom's leave control lives in a same-origin iframe and must be found there"
+  );
+
+  assert.equal(
+    detectInCall(
+      "https://app.zoom.us/wc/71587776655/start",
+      new FakeRoot({
+        controls: [new FakeControl({ label: "Search" })],
+        blindFrames: 2
+      })
+    ).active,
+    false,
+    "cross-origin frames must be skipped without throwing, and prove nothing"
+  );
+
+  assert.equal(
+    detectInCall(
+      "https://teams.live.com/v2/?meetingjoin=true",
+      new FakeRoot({ controls: [new FakeControl({ label: "Leave" })] })
+    ).active,
+    true,
+    "personal Teams runs on teams.live.com, not teams.microsoft.com"
+  );
+
   console.log(
-    "PASS platforms Meet solo=true; pre-join=false; landing=false; stray video=false; call_end icon=true; Zoom/Teams/Webex leave-control=true; their lobbies=false; non-meeting urls=false"
+    "PASS platforms Meet solo=true; pre-join=false; landing=false; stray video=false; call_end icon=true; Zoom/Teams/Webex leave-control=true; their lobbies=false; non-meeting urls=false; zoom-in-iframe=true; cross-origin-frames-skipped; teams.live.com=true"
   );
 } finally {
   if (originalHTMLMediaElement === undefined) {

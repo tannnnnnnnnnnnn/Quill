@@ -35,7 +35,8 @@ export function platformForUrl(value) {
 
   if (
     host === "teams.microsoft.com" ||
-    host === "teams.cloud.microsoft"
+    host === "teams.cloud.microsoft" ||
+    host === "teams.live.com"        // personal Microsoft accounts
   ) {
     /*
      * The whole Teams web app lives under /v2/, so the path prefix alone means
@@ -88,13 +89,37 @@ export function callKey(url) {
  * "Leave (Ctrl+Shift+H)" are stripped before testing. English only for now —
  * a localized UI falls back to no prompt, which is the safe direction.
  */
+// Bare "end" is here because Zoom labels the host's control exactly that
+// (measured 2026-07-26: aria-label="End"). It is only ever consulted on a page
+// whose URL is already a meeting, so the word cannot mean something else.
 const LEAVE_CONTROL_LABEL =
-  /^(?:leave(?:\s+(?:the\s+)?(?:call|meeting|room))?|hang\s*up|end\s+(?:the\s+)?(?:call|meeting))$/i;
+  /^(?:leave(?:\s+(?:the\s+)?(?:call|meeting|room))?|hang\s*up|end(?:\s+(?:the\s+)?(?:call|meeting))?)$/i;
+
+/*
+ * Zoom's web client renders its whole meeting UI inside a same-origin iframe
+ * (measured: app.zoom.us/wc/<id>/start embedded in the tab). Querying only the
+ * top document finds 86 buttons and none of the meeting controls, so detection
+ * could never have fired there. Descend into frames we are allowed to read;
+ * cross-origin ones throw on access and are skipped.
+ */
+function collectControls(root, depth = 0) {
+  const controls = [...root.querySelectorAll("button, [role='button']")];
+  if (depth >= 3) return controls;
+
+  for (const frame of root.querySelectorAll("iframe")) {
+    let doc = null;
+    try {
+      doc = frame.contentDocument;
+    } catch {
+      continue;   // cross-origin — not ours to read, and never our meeting UI
+    }
+    if (doc) controls.push(...collectControls(doc, depth + 1));
+  }
+  return controls;
+}
 
 function hasLeaveControl(root) {
-  const controls = [...root.querySelectorAll("button, [role='button']")];
-
-  return controls.some((control) =>
+  return collectControls(root).some((control) =>
     ["aria-label", "data-tooltip", "title"].some((attribute) => {
       const label = control.getAttribute?.(attribute);
       if (!label) return false;
@@ -105,7 +130,7 @@ function hasLeaveControl(root) {
 }
 
 function hasGoogleMeetInCallChrome(root) {
-  const controls = [...root.querySelectorAll("button, [role='button']")];
+  const controls = collectControls(root);
 
   return controls.some((control) => {
     /*

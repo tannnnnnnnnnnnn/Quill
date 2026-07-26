@@ -22,12 +22,30 @@ def _claude() -> str:
     raise SystemExit("claude CLI not found on PATH")
 
 
+def _notify_sender() -> str | None:
+    """`display notification` is attributed to whichever app ran the script, and
+    clicking it activates that app. Plain `osascript` means Script Editor opens,
+    which is confusing and useless. Wrapping the call in `tell application X`
+    hands the notification — and the click — to X instead. Obsidian is the right
+    landing place, since that is where the note is; Finder is the fallback."""
+    for app, path in (("Obsidian", "/Applications/Obsidian.app"),
+                      ("Finder", "/System/Library/CoreServices/Finder.app")):
+        if Path(path).exists():
+            return app
+    return None
+
+
+def _applescript_str(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 def notify(title: str, msg: str) -> None:
-    subprocess.run(
-        ["osascript", "-e",
-         f'display notification "{msg}" with title "{title}"'],
-        capture_output=True,
-    )
+    script = (f"display notification {_applescript_str(msg)} "
+              f"with title {_applescript_str(title)}")
+    sender = _notify_sender()
+    if sender:
+        script = f"tell application {_applescript_str(sender)} to {script}"
+    subprocess.run(["osascript", "-e", script], capture_output=True)
 
 
 def ask(question: str) -> str:

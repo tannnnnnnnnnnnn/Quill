@@ -32,6 +32,7 @@
     "https://*.zoom.us/wc/*",
     "https://teams.microsoft.com/*",
     "https://teams.cloud.microsoft/*",
+    "https://teams.live.com/*",
     "https://*.webex.com/*",
     "http://127.0.0.1:8787/*"
   ],
@@ -42,6 +43,7 @@
         "https://*.zoom.us/wc/*",
         "https://teams.microsoft.com/*",
         "https://teams.cloud.microsoft/*",
+        "https://teams.live.com/*",
         "https://*.webex.com/*"
       ],
       "exclude_matches": [
@@ -65,6 +67,7 @@
         "https://*.zoom.us/*",
         "https://teams.microsoft.com/*",
         "https://teams.cloud.microsoft/*",
+        "https://teams.live.com/*",
         "https://*.webex.com/*"
       ]
     }
