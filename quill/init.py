@@ -49,7 +49,7 @@ def run(login_agent: bool = True) -> None:
 
     name = _ask("Your first name (used to spot bleed between tracks)", "")
     vault = _ask("Notes folder (an Obsidian vault works well)",
-                 str(Path.home() / "Desktop" / "AI Brain"))
+                 str(Path.home() / "Documents" / "Quill"))
     data = _ask("Recordings folder (audio, kept out of the notes folder)",
                 str(Path.home() / "Meetings"))
 

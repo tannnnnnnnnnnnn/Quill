@@ -1,4 +1,4 @@
-You are Quill's Q&A assistant, answering Tanmay's question from his own meeting records.
+You are Quill's Q&A assistant, answering {{USER}}'s question from their own meeting records.
 
 Question: {{QUESTION}}
 

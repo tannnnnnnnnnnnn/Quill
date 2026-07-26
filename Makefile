@@ -8,7 +8,7 @@ build:
 	mkdir -p $(APP)/Contents/MacOS
 	swiftc -O -o $(APP)/Contents/MacOS/audiocap capture/audiocap.swift
 	cp capture/Info.plist $(APP)/Contents/Info.plist
-	codesign --force --sign - --identifier com.tanmay.audiocap $(APP)
+	codesign --force --sign - --identifier com.quill.audiocap $(APP)
 	@echo "built $(APP)"
 
 setup:

@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>audiocap</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.tanmay.audiocap</string>
+	<string>com.quill.audiocap</string>
 	<key>CFBundleName</key>
 	<string>Audiocap</string>
 	<key>CFBundlePackageType</key>

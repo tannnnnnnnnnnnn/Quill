@@ -54,6 +54,7 @@ def ask(question: str) -> str:
     prompt = (config.PROJECT / "prompts" / "ask.md").read_text()
     for k, v in {
         "{{QUESTION}}": question,
+        "{{USER}}": config.WHO,
         "{{NOTES_DIR}}": str(config.NOTES_DIR),
         "{{TRANSCRIPTS_DIR}}": str(config.TRANSCRIPTS_DIR),
         "{{TODO}}": str(config.TODO),
@@ -90,6 +91,7 @@ def run(d: str | Path, progress=print) -> str | None:
     date = started[:10]
 
     tokens = {
+        "{{USER}}": config.WHO,
         "{{TRANSCRIPT_PATH}}": str(transcript),
         "{{TRANSCRIPT_NAME}}": d.name,
         "{{DATE}}": date,

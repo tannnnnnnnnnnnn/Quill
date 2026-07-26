@@ -205,7 +205,8 @@ def run(d: str | Path, progress=print) -> Path:
         f"# Transcript: {meta.get('title') or d.name}\n\n"
         f"date: {meta.get('started', '')}  \n"
         f"duration: {meta.get('duration_minutes', '?')} min  \n"
-        f"speakers: **Me** = Tanmay, **Them** = other participants\n\n"
+        f"speakers: **Me** = {config.USER_NAME or 'the person recording'}, "
+        f"**Them** = other participants\n\n"
     )
     out = d / "transcript.md"
     out.write_text(header + body + "\n")
