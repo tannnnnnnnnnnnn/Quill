@@ -1,0 +1,165 @@
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  color: #1c1c1c;
+  background: #f4f2ed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  min-height: 276px;
+  margin: 0;
+  background: #f4f2ed;
+}
+
+button {
+  font: inherit;
+}
+
+.popup-shell {
+  padding: 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-family: ui-serif, "New York", Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.brand img {
+  object-fit: contain;
+}
+
+.status-card {
+  overflow: hidden;
+  border: 1px solid rgba(28, 28, 28, 0.07);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #9a978f;
+}
+
+.status-dot[data-state="connected"] {
+  background: #4b7bec;
+  box-shadow: 0 0 0 4px rgba(75, 123, 236, 0.1);
+}
+
+.status-dot[data-state="offline"] {
+  background: #ffc46b;
+}
+
+.status-label {
+  color: #9a978f;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-value {
+  margin-top: 2px;
+  color: #6b6b66;
+  font-size: 12.5px;
+}
+
+.recording-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-top: 1px solid rgba(28, 28, 28, 0.07);
+  color: #6b6b66;
+  font-size: 12.5px;
+}
+
+.recording-state time {
+  color: #9a978f;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.offline-message {
+  margin: 10px 1px 0;
+  color: #6b6b66;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.record-button {
+  width: 100%;
+  height: 38px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: #4b7bec;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 140ms ease, opacity 140ms ease;
+}
+
+.record-button:hover:not(:disabled) {
+  background: #3d6bd8;
+}
+
+.record-button[data-action="stop"] {
+  background: rgba(28, 28, 28, 0.05);
+  color: #1c1c1c;
+}
+
+.record-button[data-action="stop"]:hover:not(:disabled) {
+  background: rgba(28, 28, 28, 0.09);
+}
+
+.record-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.record-button:focus-visible,
+.options-link:focus-visible {
+  outline: 2px solid #4b7bec;
+  outline-offset: 2px;
+}
+
+.options-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 9px 2px;
+  border: 0;
+  background: transparent;
+  color: #6b6b66;
+  cursor: pointer;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.options-link:hover {
+  color: #1c1c1c;
+}

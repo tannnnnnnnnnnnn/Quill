@@ -44,6 +44,7 @@ meet status
 meet ask "what did we decide about X?"   # Q&A over all your meetings
 meet transcribe <dir>          # re-run stages on an old recording
 meet process <dir>
+meet serve                     # browser-extension API on 127.0.0.1:8787
 ```
 
 **Call detection:** the menu bar app watches for a meeting — native app
@@ -57,6 +58,10 @@ Automation permission (python → Chrome). Toggle: menu → "Call Detection".
 **Live transcript:** while recording, a floating panel on the right shows
 Me/Them lines within a few seconds of speech (12s tail window re-transcribed
 every 4s, sentence-settled, deduped). Toggle: menu → "Live Transcript".
+
+**Browser extension:** run `uv run meet serve` to expose Quill's recording
+controls and live transcript to the extension. The server listens only on
+`127.0.0.1:8787`; leave it running while using Quill in Chrome.
 
 **Meeting index:** every processed call adds a one-line summary to
 `AI Brain/Meetings/INDEX.md` — glanceable list of which call was about what.

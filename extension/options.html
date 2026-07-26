@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quill extension settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="settings-shell">
+      <header class="settings-header">
+        <div class="brand">
+          <img src="icons/mark.png" alt="" width="31" height="28">
+          <span>Quill</span>
+        </div>
+        <p>Browser meeting detection for your local, private meeting scribe.</p>
+      </header>
+
+      <form id="settingsForm">
+        <section class="settings-card">
+          <div class="section-copy">
+            <h1>Local connection</h1>
+            <p>The HTTP endpoint exposed by the Quill menu-bar app.</p>
+          </div>
+          <label class="field">
+            <span>Server URL</span>
+            <input id="serverUrl" name="serverUrl" type="url" required spellcheck="false">
+          </label>
+        </section>
+
+        <section class="settings-card">
+          <div class="section-copy">
+            <h2>Detection</h2>
+            <p>Choose where Quill watches for an active browser call.</p>
+          </div>
+          <div class="site-list" id="siteList"></div>
+          <label class="toggle-row">
+            <span>
+              <strong>Auto-prompt</strong>
+              <small>Show the “Call detected” card when Quill asks to prompt.</small>
+            </span>
+            <input id="autoPrompt" name="autoPrompt" type="checkbox">
+          </label>
+        </section>
+
+        <div class="form-actions">
+          <span class="save-status" id="saveStatus" role="status"></span>
+          <button type="submit">Save settings</button>
+        </div>
+      </form>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

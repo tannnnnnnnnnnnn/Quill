@@ -1,0 +1,124 @@
+:root {
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  background: #15171b;
+  color: #f5f6f8;
+}
+
+.meeting-stage {
+  min-height: 100vh;
+  padding: 54px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(75, 123, 236, 0.18), transparent 31%),
+    #15171b;
+}
+
+.meeting-copy {
+  max-width: 560px;
+}
+
+.eyebrow {
+  color: #9da1aa;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 7px 0 0;
+  font-size: 30px;
+}
+
+.meeting-copy p {
+  margin: 7px 0 0;
+  color: #9da1aa;
+  font-size: 13px;
+}
+
+.participant-grid {
+  width: min(820px, calc(100vw - 440px));
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.participant-grid > div {
+  min-height: 210px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.participant-grid span {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #d7d9de;
+  font-size: 15px;
+}
+
+.harness-controls {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 300px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 13px;
+  background: rgba(22, 24, 28, 0.94);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(16px);
+}
+
+.harness-controls > div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 11px;
+  font-size: 12px;
+}
+
+.harness-controls output {
+  color: #7db8ff;
+  font-family: ui-monospace, "SF Mono", monospace;
+}
+
+.harness-controls button {
+  width: 100%;
+  height: 32px;
+  margin-top: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.harness-controls button:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.harness-controls p {
+  margin: 11px 1px 0;
+  color: #9da1aa;
+  font-size: 10.5px;
+  line-height: 1.45;
+}

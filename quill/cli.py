@@ -5,6 +5,7 @@
   meet status
   meet transcribe <dir>
   meet process <dir>
+  meet serve
 """
 
 import argparse
@@ -42,6 +43,7 @@ def main() -> None:
     s.add_argument("question", nargs="+")
 
     sub.add_parser("dashboard", help="open the Quill dashboard in your browser")
+    sub.add_parser("serve", help="serve the local browser-extension API")
 
     a = p.parse_args()
     if a.cmd == "start":
@@ -68,6 +70,9 @@ def main() -> None:
         from . import dashboard
         import subprocess as sp
         sp.run(["open", dashboard.URL])
+    elif a.cmd == "serve":
+        from . import server
+        server.serve()
     sys.exit(0)
 
 
