@@ -11,6 +11,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 from . import config, process, record, transcribe
 
@@ -18,7 +19,8 @@ from . import config, process, record, transcribe
 def _pipeline(d: str) -> None:
     transcribe.run(d)
     note = process.run(d)
-    process.notify("Meeting processed", note or "see claude.log")
+    process.notify("Meeting processed",
+                   Path(note).stem if note else "see claude.log")
     if note:
         print(f"\nnote ready: {note}")
 

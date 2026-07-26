@@ -306,7 +306,8 @@ class QuillServer:
         try:
             transcribe.run(recording_dir)
             note = process.run(recording_dir)
-            process.notify("Meeting processed", note or "see claude.log")
+            process.notify("Meeting processed",
+                           Path(note).stem if note else "see claude.log")
         except BaseException as e:  # SystemExit included — report without killing server
             traceback.print_exc()
             process.notify("Quill — error", str(e)[:120])
