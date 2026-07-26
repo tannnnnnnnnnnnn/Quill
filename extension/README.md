@@ -19,15 +19,20 @@ enable or disable individual meeting platforms, or disable automatic prompts.
 
 ## Supported browser meetings
 
-- Google Meet: `meet.google.com`
-- Zoom web client: `*.zoom.us/wc/*`
-- Microsoft Teams: `teams.microsoft.com` and `teams.cloud.microsoft`
-- Webex: `*.webex.com`
+- Google Meet: `meet.google.com` — **measured on real calls**
+- Zoom web client: `*.zoom.us/wc/*` — not yet measured
+- Microsoft Teams: `teams.microsoft.com` and `teams.cloud.microsoft` — not yet measured
+- Webex: `*.webex.com` — not yet measured
 
 The service worker follows tab updates, removals, and activation. The content
-script confirms ambiguous meeting URLs using only URL shape and the presence of
-active page media elements. It does not read chat, captions, participant names,
-or meeting content.
+script confirms a meeting from two things only: the URL shape, and whether the
+page is showing a control that leaves the call. For Meet that is the locale-
+independent `call_end` icon ligature, measured against a real call. The other
+three match a leave control by its accessible label, which has not been checked
+against those products yet — so they may fail to prompt, but they will not
+prompt from a pre-join lobby, which offers "Join" and never "Leave".
+
+Neither path reads chat, captions, participant names, or meeting content.
 
 ## Permission rationale
 
