@@ -21,19 +21,21 @@ enable or disable individual meeting platforms, or disable automatic prompts.
 
 - Google Meet: `meet.google.com` — **measured on a real call**
 - Zoom web client: `*.zoom.us/wc/*` — **measured on a real call**
-- Microsoft Teams: `teams.microsoft.com`, `teams.cloud.microsoft`, `teams.live.com` — not yet measured
+- Microsoft Teams: `teams.microsoft.com`, `teams.cloud.microsoft`, `teams.live.com` — **measured on a real call**
 - Webex: `*.webex.com` — not yet measured
 
 The service worker follows tab updates, removals, and activation. The content
 script confirms a meeting from two things only: the URL shape, and whether the
 page is showing a control that leaves the call. For Meet that is the locale-
-independent `call_end` icon ligature, measured against a real call. The other
-others match a leave control by its accessible label. Zoom was measured on a
-real call: it labels the host's control `End`, and — importantly — renders its
+independent `call_end` icon ligature, measured against a real call. The others
+match a leave control by its accessible label. Zoom was measured on a real
+call: it labels the host's control `End`, and — importantly — renders its
 entire meeting UI inside a same-origin iframe, so detection descends into
-readable frames. Teams and Webex label matching is still unmeasured; they may
-fail to prompt, but they will not prompt from a pre-join lobby, which offers
-"Join" and never "Leave".
+readable frames. Teams was measured too, and is the reason detection ignores
+the URL entirely: `teams.live.com/v2/` reads identically in the lobby, in the
+call, and in the chat list, so only its `Leave` control distinguishes them.
+Webex label matching is still unmeasured; it may fail to prompt, but it will
+not prompt from a pre-join lobby, which offers "Join" and never "Leave".
 
 Neither path reads chat, captions, participant names, or meeting content.
 
