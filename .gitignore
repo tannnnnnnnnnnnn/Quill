@@ -5,3 +5,8 @@ __pycache__/
 uv.lock
 .DS_Store
 dist/
+
+# Store-listing artwork and screenshots: made per submission, not part of the
+# source. The icons the extension ships are in extension/icons/.
+Web Store Assets*/
+/*.zip
