@@ -128,11 +128,11 @@ every 4s, sentence-settled, deduped). Toggle: menu → "Live Transcript".
 `127.0.0.1:8787` by itself, so if Quill is in your menu bar the extension
 works. `meet serve` is only for running it without the menu bar app.
 
-To add the extension: open `chrome://extensions`, turn on **Developer mode**,
-click **Load unpacked**, and choose the `extension/` folder inside your Quill
-install (`~/.local/share/quill/extension` if you used the installer). Chrome
-will remind you about developer mode on every restart until Quill is in the
-Chrome Web Store.
+To add the extension: install [Quill from the Chrome Web Store](https://chromewebstore.google.com/detail/quill/mckdigacdodbocengchaeonaamobcnil).
+To run a development copy instead, open `chrome://extensions`, turn on
+**Developer mode**, click **Load unpacked**, and choose the `extension/`
+folder inside your Quill install (`~/.local/share/quill/extension` if you
+used the installer).
 
 **Meeting index:** every processed call adds a one-line summary to
 `Meetings/INDEX.md` in your notes folder — a glanceable list of which call was

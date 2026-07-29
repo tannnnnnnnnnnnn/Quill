@@ -1,7 +1,7 @@
 // Set this once the Web Store listing is approved; the extension ID appears in
 // the listing URL. While it is empty the install buttons point at the repo
 // instead, because there is nothing to add to Chrome yet.
-const CHROME_STORE_URL = "";
+const CHROME_STORE_URL = "https://chromewebstore.google.com/detail/quill/mckdigacdodbocengchaeonaamobcnil";
 const REPO_URL = "https://github.com/tannnnnnnnnnnnn/Quill";
 
 (() => {
