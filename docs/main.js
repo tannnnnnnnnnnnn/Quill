@@ -27,6 +27,39 @@ const REPO_URL = "https://github.com/tannnnnnnnnnnnn/Quill";
     link.querySelector(".chrome-mark")?.remove();
   });
 
+  const CONFETTI_COLORS = ["#2f43ff", "#4c7dff", "#e2b93b", "#e46a5a", "#57b26a"];
+  function burstConfetti(box) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = box.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    for (let i = 0; i < 14; i++) {
+      const bit = document.createElement("span");
+      bit.className = "confetti-bit";
+      const angle = (Math.PI * 2 * i) / 14 + Math.random() * 0.5;
+      const dist = 26 + Math.random() * 34;
+      bit.style.cssText = `left:${x}px;top:${y}px;background:${CONFETTI_COLORS[i % CONFETTI_COLORS.length]};--dx:${Math.cos(angle) * dist}px;--dy:${Math.sin(angle) * dist - 14}px;--rot:${Math.random() * 540 - 270}deg`;
+      document.body.appendChild(bit);
+      bit.addEventListener("animationend", () => bit.remove(), { once: true });
+    }
+  }
+
+  document.querySelectorAll("[data-action-item]").forEach((item) => {
+    const box = item.querySelector(".checkbox");
+    item.addEventListener("click", () => {
+      const nowChecked = !box.classList.contains("checked");
+      box.classList.toggle("checked", nowChecked);
+      item.classList.toggle("done", nowChecked);
+      if (nowChecked) {
+        box.classList.remove("pop");
+        void box.offsetWidth;
+        box.classList.add("pop");
+        burstConfetti(box);
+      }
+      buildClone();
+    });
+  });
+
   let band;
   let inner;
   let rebuildTimer;
