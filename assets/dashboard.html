@@ -6,8 +6,8 @@
 <title>Quill</title>
 <style>
   :root{
-    --ink:#1c1c1c; --paper:#f1efe9; --card:#fbfaf7; --white:#ffffff;
-    --sec:#6b6b66; --ter:#9a978f; --accent:#4b7bec; --accent-h:#3d6bd8;
+    --ink:#1c1c1c; --paper:#dedbd3; --card:#f4f2ed; --white:#fbfaf7;
+    --sec:#57534b; --ter:#8a857b; --accent:#4b7bec; --accent-h:#3d6bd8;
     --me:#7db8ff; --them:#e8a33d; --red:#d2543a;
     --ghost:rgba(28,28,28,.05); --ghost-h:rgba(28,28,28,.09);
     --hair:rgba(28,28,28,.08);
@@ -80,6 +80,16 @@
   .mtg .t{font-weight:600;font-size:14px;margin:2px 0 4px;line-height:1.3}
   .mtg .s{font-size:11.5px;color:var(--sec);line-height:1.45;display:-webkit-box;
           -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .search-wrap{padding:0 12px 10px;flex:none}
+  .search-wrap input{width:100%;border:1px solid var(--hair);background:var(--white);
+                     border-radius:10px;padding:9px 11px;font:inherit;color:var(--ink);
+                     outline:none;transition:border-color .12s, box-shadow .12s}
+  .search-wrap input:focus{border-color:var(--accent);
+                           box-shadow:0 0 0 3px rgba(75,123,236,.14)}
+  .result-count{padding:0 18px 8px;color:var(--ter);font-size:11px}
+  .search-result .s{display:block;-webkit-line-clamp:unset;margin-top:5px}
+  mark{background:rgba(244,202,73,.4);color:var(--ink);border-radius:3px;padding:0 2px}
+  [data-theme="dark"] mark{background:rgba(232,180,54,.32);color:#fff3c4}
 
   /* note pane */
   .note-scroll{padding:26px 32px}
@@ -197,6 +207,10 @@
 <main>
   <section class="pane">
     <div class="pane-head">Meetings</div>
+    <div class="search-wrap">
+      <input id="meetingSearch" type="search" placeholder="Search what was said…"
+             autocomplete="off" aria-label="Search meetings">
+    </div>
     <div class="scroll" id="list"></div>
   </section>
 
@@ -284,8 +298,7 @@ function trHtml(t){
 
 // night mode: manual choice persists; default follows system
 const applyTheme = t => document.documentElement.setAttribute("data-theme", t);
-const sysDark = matchMedia("(prefers-color-scheme: dark)");
-let theme = localStorage.getItem("quill-theme") || (sysDark.matches ? "dark" : "light");
+let theme = localStorage.getItem("quill-theme") || "light";
 applyTheme(theme);
 document.addEventListener("DOMContentLoaded", ()=>{
   const b = document.getElementById("themeBtn");
@@ -295,19 +308,25 @@ document.addEventListener("DOMContentLoaded", ()=>{
                     localStorage.setItem("quill-theme", theme); applyTheme(theme); paint(); };
 });
 
-let meetings=[], selName=null;
+let meetings=[], selName=null, searchTimer=null, searchRequest=0;
+function renderMeetings(){
+  const L = document.getElementById("list");
+  L.innerHTML = meetings.map(m=>`
+    <div class="mtg ${m.name===selName?"sel":""}" data-name="${encodeURIComponent(m.name)}"
+         onclick="openNote(${JSON.stringify(m.name).replace(/"/g,"&quot;")})">
+      <div class="d">${m.date}</div>
+      <div class="t serif">${esc(m.name.slice(11)||m.name)}</div>
+      <div class="s">${esc(m.summary)}</div>
+    </div>`).join("") || `<div class="empty">No meetings yet — take a call.</div>`;
+}
+
 async function loadMeetings(keepSel=true){
   meetings = await api("/api/meetings");
   document.getElementById("nMtg").textContent = meetings.length;
   if (!keepSel || !meetings.some(m=>m.name===selName))
     selName = meetings.length ? meetings[0].name : null;
-  const L = document.getElementById("list");
-  L.innerHTML = meetings.map(m=>`
-    <div class="mtg ${m.name===selName?"sel":""}" onclick="openNote(${JSON.stringify(m.name).replace(/"/g,"&quot;")})">
-      <div class="d">${m.date}</div>
-      <div class="t serif">${esc(m.name.slice(11)||m.name)}</div>
-      <div class="s">${esc(m.summary)}</div>
-    </div>`).join("") || `<div class="empty">No meetings yet — take a call.</div>`;
+  if (document.getElementById("meetingSearch").value.trim().length < 2)
+    renderMeetings();
   if (selName) openNote(selName); else
     document.getElementById("noteWrap").innerHTML = `<div class="empty">No meetings yet.</div>`;
 }
@@ -315,7 +334,7 @@ async function loadMeetings(keepSel=true){
 async function openNote(name){
   selName = name;
   document.querySelectorAll(".mtg").forEach(el=>{
-    el.classList.toggle("sel", el.querySelector(".t").textContent === (name.slice(11)||name));
+    el.classList.toggle("sel", decodeURIComponent(el.dataset.name) === name);
   });
   const r = await api("/api/note?name="+encodeURIComponent(name));
   const body = md(r.content||"");
@@ -342,6 +361,43 @@ async function openNote(name){
     } else { tr.style.display="none"; tb.textContent="Show full transcript"; }
   };
 }
+
+function highlight(src, term){
+  if (!term) return esc(src);
+  const parts = src.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "ig"));
+  return parts.map((part, i)=>i%2 ? `<mark>${esc(part)}</mark>` : esc(part)).join("");
+}
+async function searchMeetings(){
+  const input = document.getElementById("meetingSearch");
+  const term = input.value.trim();
+  clearTimeout(searchTimer);
+  if (term.length < 2){
+    searchRequest++;
+    renderMeetings();
+    return;
+  }
+  searchTimer = setTimeout(async ()=>{
+    const request = ++searchRequest;
+    const data = await api("/api/search?q="+encodeURIComponent(term));
+    if (request !== searchRequest || input.value.trim() !== term) return;
+    const L = document.getElementById("list");
+    L.innerHTML = `<div class="result-count">${data.results.length} results</div>` +
+      (data.results.map(r=>{
+        const target = r.meeting_name || r.name;
+        return `<div class="mtg search-result ${target===selName?"sel":""}"
+                     data-name="${encodeURIComponent(target)}"
+                     onclick="openNote(${JSON.stringify(target).replace(/"/g,"&quot;")})">
+          <div class="d">${esc(r.date || "Undated")} · ${r.count} ${r.count===1?"match":"matches"}</div>
+          <div class="t serif">${highlight(r.title, term)}</div>
+          ${r.snippets.map(s=>`<div class="s">${highlight(s, term)}</div>`).join("")}
+        </div>`;
+      }).join("") || `<div class="empty">No matching meetings.</div>`);
+  }, 250);
+}
+document.getElementById("meetingSearch").addEventListener("input", searchMeetings);
+document.getElementById("meetingSearch").addEventListener("keydown", e=>{
+  if (e.key==="Escape"){ e.currentTarget.value=""; searchMeetings(); }
+});
 
 async function enhMeeting(name){
   if (!confirm(`Re-process "${name.slice(11)||name}" from its audio?\n\nRebuilds the transcript and note with the current (better) models. Takes a few minutes; you'll get a notification.`)) return;

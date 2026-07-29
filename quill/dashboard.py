@@ -36,6 +36,88 @@ def _safe_read(base, name):
     return p.read_text()
 
 
+def _search_date(name, content):
+    m = re.search(r"\d{4}-\d{2}-\d{2}", name)
+    if not m:
+        m = re.search(r"(?im)^(?:date:\s*|date\s+)(\d{4}-\d{2}-\d{2})",
+                      content)
+    return (m.group(1) if m.lastindex else m.group(0)) if m else ""
+
+
+def _search_title(name, content):
+    m = re.search(r"(?m)^#\s+(?:Transcript:\s*)?(.+?)\s*$", content)
+    if m:
+        return m.group(1)
+    return re.sub(r"^\d{4}-\d{2}-\d{2}[- _]*", "", name) or name
+
+
+def _search_snippets(content, term):
+    matches = list(re.finditer(re.escape(term), content, re.IGNORECASE))
+    snippets = []
+    for match in matches[:3]:
+        start = max(0, match.start() - 60)
+        end = min(len(content), match.end() + 60)
+        excerpt = re.sub(r"\s+", " ", content[start:end]).strip()
+        # markdown noise reads badly in a one-line snippet
+        excerpt = re.sub(r"[#*`>\[\]]+", "", excerpt)
+        snippets.append(("…" if start else "") + excerpt
+                        + ("…" if end < len(content) else ""))
+    return snippets, len(matches)
+
+
+def _search(term):
+    term = term.strip()
+    if len(term) < 2:
+        return {"query": term, "results": []}
+
+    notes = {}
+    transcript_notes = {}
+    for path in config.NOTES_DIR.glob("*.md"):
+        if path.name == "INDEX.md":
+            continue
+        name = path.stem
+        content = _safe_read(config.NOTES_DIR, name)
+        if content is None:
+            continue
+        notes[name] = content
+        for transcript in re.findall(r"\[\[Transcripts/([^\]]+)\]\]", content):
+            transcript_notes[transcript] = name
+
+    results = []
+    for name, content in notes.items():
+        snippets, count = _search_snippets(content, term)
+        if count:
+            results.append({
+                "name": name,
+                "meeting_name": name,
+                "title": _search_title(name, content),
+                "date": _search_date(name, content),
+                "snippets": snippets,
+                "count": count,
+            })
+
+    for path in config.TRANSCRIPTS_DIR.glob("*.md"):
+        name = path.stem
+        content = _safe_read(config.TRANSCRIPTS_DIR, name)
+        if content is None:
+            continue
+        snippets, count = _search_snippets(content, term)
+        if count:
+            meeting_name = transcript_notes.get(name, "")
+            title_source = notes.get(meeting_name, content)
+            results.append({
+                "name": name,
+                "meeting_name": meeting_name,
+                "title": _search_title(meeting_name or name, title_source),
+                "date": _search_date(name, content),
+                "snippets": snippets,
+                "count": count,
+            })
+
+    results.sort(key=lambda r: (r["date"], r["name"]), reverse=True)
+    return {"query": term, "results": results}
+
+
 def _todos():
     open_, done = [], []
     if config.TODO.exists():
@@ -164,6 +246,8 @@ class _Handler(BaseHTTPRequestHandler):
             c = _safe_read(config.TRANSCRIPTS_DIR, q.get("name", [""])[0])
             self._send({"content": c} if c is not None else {"error": "not found"},
                        200 if c is not None else 404)
+        elif u.path == "/api/search":
+            self._send(_search(q.get("q", [""])[0]))
         elif u.path == "/api/todos":
             self._send(_todos())
         else:
