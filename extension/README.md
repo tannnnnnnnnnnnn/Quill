@@ -5,7 +5,11 @@ supported browser calls without AppleScript, asks whether to take notes, starts
 and stops the local recorder, and displays the live two-sided transcript in an
 isolated Shadow DOM panel.
 
-## Load unpacked
+## Install
+
+Published on the [Chrome Web Store](https://chromewebstore.google.com/detail/quill/mckdigacdodbocengchaeonaamobcnil).
+
+## Load unpacked (development)
 
 1. Start the Quill menu-bar app and confirm its HTTP server is listening at
    `http://127.0.0.1:8787`.
